@@ -11,8 +11,7 @@
     "bundle:sdk": "node scripts/bundle-sdk.mjs"
   },
   "dependencies": {
-    "@causet/sdk": "file:../../../causet-sdks/packages/js",
-    "@causet/sdk-core": "file:../../../causet-sdks/packages/core"
+    "@causet/sdk": "0.1.0"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"

@@ -1,0 +1,149 @@
+# Dependabot — https://docs.github.com/en/code-security/dependabot
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+
+  - package-ecosystem: npm
+    directory: /demos
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      causet-sdk:
+        patterns:
+          - "@causet/*"
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /demos/wallet-demo/app
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      causet-sdk:
+        patterns:
+          - "@causet/*"
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /demos/inventory-demo/app
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      causet-sdk:
+        patterns:
+          - "@causet/*"
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /demos/ai-fraud-detection-demo
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      causet-sdk:
+        patterns:
+          - "@causet/*"
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /demos/ai-fraud-detection-demo/app
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /demos/support-agent-demo
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      causet-sdk:
+        patterns:
+          - "@causet/*"
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /demos/support-agent-demo/app
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      npm-dev:
+        dependency-type: development
+        patterns:
+          - "*"

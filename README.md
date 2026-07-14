@@ -1,10 +1,15 @@
 # Causet Templates
 
-Official templates, quickstarts, and demos for building, running, and deploying [Causet](https://github.com/Causet-Inc/Causet) applications locally or on Causet Cloud.
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Validate](https://github.com/Causet-Inc/causet-templates/actions/workflows/validate.yml/badge.svg)](https://github.com/Causet-Inc/causet-templates/actions/workflows/validate.yml)
 
-**GitHub:** [https://github.com/Causet-Inc/causet-templates](https://github.com/Causet-Inc/causet-templates)
+Official templates, quickstarts, and demos for building, running, and deploying [Causet](https://github.com/Causet-Inc/Causet) applications locally or on [Causet Cloud](https://causet.cloud).
 
-The Causet CLI clones this repo by default (`templates_repo` in `~/.causet/config.json`).
+The [Causet CLI](https://github.com/Causet-Inc/Causet/tree/main/apps/causet-cli) clones this repo by default (`templates_repo` in `~/.causet/config.json`).
+
+## Contributing
+
+We welcome improvements. See [CONTRIBUTING.md](CONTRIBUTING.md). Please read our [Code of Conduct](CODE_OF_CONDUCT.md). To report security issues, see [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -14,9 +19,12 @@ The Causet CLI clones this repo by default (`templates_repo` in `~/.causet/confi
 causet-templates/
   README.md
   LICENSE
+  NOTICE
   registry.json           # catalog index for causet new / causet templates
-  demos/                  # full demos with UI
-  quickstarts/            # minimal tutorials
+  demos/                  # full demos with UI and app runners
+  quickstarts/            # Product DSL tutorials (causet/ only)
+  scripts/validate.mjs    # CI catalog checks
+  .github/dependabot.yml  # weekly npm + Actions updates
 ```
 
 Each template folder:
@@ -26,10 +34,11 @@ Each template folder:
   template.json     # metadata — id, commands, secrets, causetFiles
   README.md         # template-specific walkthrough
   causet/           # Product DSL (.causet)
-  app/              # Node runner or demo server (optional)
-  demo.html         # browser demo (optional)
+  app/              # Node runner or demo server (demos only)
+  demo.html         # browser demo (demos only)
   sample-intents/   # JSON payloads for causet intent (optional)
-  env.example       # copy to .env in scaffolded project
+  env.example       # copy to .env in scaffolded project (demos only)
+  gitignore         # scaffolded as .gitignore by the CLI
 ```
 
 ---
@@ -39,7 +48,7 @@ Each template folder:
 | Requirement | Demos | Quickstarts |
 |-------------|-------|-------------|
 | [Causet CLI](https://github.com/Causet-Inc/Causet/tree/main/apps/causet-cli) | ✓ | ✓ |
-| Node.js 20+ | ✓ | ✓ |
+| Node.js 20+ | ✓ | — |
 | Git | ✓ | ✓ |
 | Docker + local stack | ✓ (`causet local up`) | optional |
 | OpenAI API key | AI demos only | — |
@@ -86,28 +95,22 @@ causet new hello-causet my-hello
 causet new ai-fraud-detection my-fraud
 ```
 
-### Use this repo directly (local dev)
+### Use a local clone (development)
 
 ```bash
-export CAUSET_TEMPLATES_DIR=/Users/patrick.mcdonald/pats_tools/causet-templates
+git clone https://github.com/Causet-Inc/causet-templates.git
+cd causet-templates
+
+export CAUSET_TEMPLATES_DIR="$PWD"
 causet templates list
 causet new wallets my-wallets
 ```
 
-Or clone from disk when iterating:
+Or point the CLI at a `file://` URL:
 
 ```bash
-export CAUSET_TEMPLATES_REPO=file:///Users/patrick.mcdonald/pats_tools/causet-templates
+export CAUSET_TEMPLATES_REPO="file://$(pwd)"
 causet templates update
-```
-
-### Init starters (`causet init`)
-
-DSL starters like `concert-app` are registered separately in the CLI’s `catalog.yaml` and may also live in this repo at the root (e.g. `concert-app/`). Use:
-
-```bash
-causet init my-app --template concert-app
-causet init templates
 ```
 
 ---
@@ -118,14 +121,17 @@ After `causet new <id> <name>`:
 
 ```bash
 cd <project-name>
-npm install --prefix app
-cp env.example .env    # scaffold copies as .env.example
+
+# Demos with app runners or browser bundles
+npm install --prefix app          # or npm install at project root (see template README)
+cp env.example .env                 # demos only; scaffold may use .env.example
 
 causet context use env local
 causet build compile --runtime causet --out dist
 causet deploy --fork sandbox --yes
 
-# Then run the demo or app (below)
+# Quickstarts: exercise via CLI (no app/ folder)
+# Demos: run the UI or dev server (see template README)
 ```
 
 ---
@@ -134,12 +140,12 @@ causet deploy --fork sandbox --yes
 
 | Id | Path | Category | OpenAI | Run after deploy |
 |----|------|----------|--------|------------------|
-| `ai-fraud-detection` | `demos/ai-fraud-detection-demo` | demo | ✓ | `open demo.html` |
-| `support-agent` | `demos/support-agent-demo` | demo | ✓ | `open demo.html` |
+| `ai-fraud-detection` | `demos/ai-fraud-detection-demo` | demo | ✓ | serve `demo.html` over HTTP |
+| `support-agent` | `demos/support-agent-demo` | demo | ✓ | serve `demo.html` over HTTP |
 | `inventory` | `demos/inventory-demo` | demo | — | `npm run dev --prefix app` → :3848 |
 | `wallets` | `demos/wallet-demo` | demo | — | `npm run dev --prefix app` → :3850 |
-| `hello-causet` | `quickstarts/hello-causet` | quickstart | — | `open demo.html` |
-| `audit-log-api` | `quickstarts/audit-log-api` | quickstart | — | `npm run dev --prefix app` |
+| `hello-causet` | `quickstarts/hello-causet` | quickstart | — | CLI intents + queries |
+| `audit-log-api` | `quickstarts/audit-log-api` | quickstart | — | CLI intents + queries |
 
 ---
 
@@ -147,15 +153,13 @@ causet deploy --fork sandbox --yes
 
 ### `hello-causet`
 
-First app — intents → events → projections → queries.
+First app — intents → events → projections → queries (Product DSL only).
 
 ```bash
 causet new hello-causet my-hello
 cd my-hello
-npm install --prefix app && cp .env.example .env
 causet build compile --runtime causet --out dist
 causet deploy --fork sandbox --yes
-open demo.html
 ```
 
 CLI:
@@ -170,13 +174,19 @@ causet query get_greeting --param greeting_id=greet-1 --fork sandbox
 
 ### `audit-log-api`
 
-Append-only audit trail + timeline queries + HTTP API.
+Append-only audit trail with timeline projections and named queries (Product DSL only).
 
 ```bash
 causet new audit-log-api my-audit
-cd my-audit && npm install --prefix app && cp .env.example .env
-causet build compile --runtime causet --out dist && causet deploy --fork sandbox --yes
-npm run dev --prefix app
+cd my-audit
+causet build compile --runtime causet --out dist
+causet deploy --fork sandbox --yes
+```
+
+```bash
+causet intent RECORD_ACTION --stream audit_entry_stream --entity entry-1 \
+  --payload '{"entry_id":"entry-1","actor":"alice","action":"login","resource":"auth"}' --fork sandbox
+causet query list_recent --fork sandbox
 ```
 
 ---
@@ -209,7 +219,7 @@ Legacy CRUD vs Causet retrofit — toggle in one UI.
 
 ```bash
 causet new inventory my-inventory
-cd my-inventory && npm install --prefix app && cp .env.example .env
+cd my-inventory && npm install --prefix app && cp env.example .env
 causet build compile --runtime causet --out dist && causet deploy --fork sandbox --yes
 npm run dev --prefix app
 ```
@@ -224,10 +234,10 @@ Ticket triage with decisions, memories, projections.
 
 ```bash
 causet new support-agent my-support
-cd my-support && npm install --prefix app && cp .env.example .env
+cd my-support && npm install && cp env.example .env
 causet secrets set openai --fork sandbox
 causet build compile --runtime causet --out dist && causet deploy --fork sandbox --yes
-open demo.html
+# serve demo.html over HTTP — see template README
 ```
 
 ```bash
@@ -242,10 +252,10 @@ Card auth → AI fraud decision → branch events → dashboard.
 
 ```bash
 causet new ai-fraud-detection my-fraud
-cd my-fraud && npm install --prefix app && cp .env.example .env
+cd my-fraud && npm install && cp env.example .env
 causet secrets set openai --fork sandbox
 causet build compile --runtime causet --out dist && causet deploy --fork sandbox --yes
-open demo.html
+# serve demo.html over HTTP — see template README
 ```
 
 Use **Run** in the UI or:
@@ -258,31 +268,33 @@ causet intent CARD_TRANSACTION_AUTHORIZED \
 
 ---
 
-## Demo vs app
+## Demo vs quickstart
 
 | Template | How to run | URL |
 |----------|------------|-----|
-| `hello-causet` | `open demo.html` | static file |
-| `audit-log-api` | `npm run dev --prefix app` | see app README |
+| `hello-causet` | compile + deploy, then CLI | — |
+| `audit-log-api` | compile + deploy, then CLI | — |
 | `wallets` | `npm run dev --prefix app` | http://localhost:3850 |
 | `inventory` | `npm run dev --prefix app` | http://localhost:3848 |
-| `support-agent` | `open demo.html` | static (deploy first) |
-| `ai-fraud-detection` | `open demo.html` | static (deploy first) |
+| `support-agent` | serve `demo.html` over HTTP | deploy first |
+| `ai-fraud-detection` | serve `demo.html` over HTTP | deploy first |
 
-**Deploy before opening browser demos** — they call `http://localhost:8085` by default.
+**Quickstarts** are Product DSL only (`causet/`). **Demos** include UI and app runners — deploy before opening browser demos.
+
+Browser demos use [`@causet/sdk`](https://www.npmjs.com/package/@causet/sdk) from npm (bundled under `vendor/`). Node demos use [`@causet/sdk-node`](https://www.npmjs.com/package/@causet/sdk-node).
 
 ---
 
 ## Environment variables
 
-Copy `env.example` → `.env` in your scaffolded project:
+Copy `env.example` → `.env` in demo projects:
 
 | Variable | Local default |
 |----------|---------------|
 | `CAUSET_API_URL` | `http://localhost:8085` |
 | `CAUSET_QUERY_URL` | `http://localhost:8086` |
 | `CAUSET_REALTIME_URL` | `http://localhost:8081` |
-| `CAUSET_PLATFORM` | `local-platform` or `test-platform` |
+| `CAUSET_PLATFORM` | `local-platform` |
 | `CAUSET_APPLICATION` | your app slug |
 | `CAUSET_FORK` | `sandbox` |
 
@@ -294,29 +306,20 @@ AI demos: `causet secrets set openai --fork sandbox`.
 
 1. Create `demos/my-demo/` or `quickstarts/my-demo/` with `template.json`, `README.md`, `causet/`, etc.
 2. Add an entry to `registry.json` (`path` must match the folder).
-3. Push to `main`.
-4. Users run `causet templates update`.
+3. Run `node scripts/validate.mjs`.
+4. Open a pull request to `main`.
 
 `template.json` shape — see any existing template or the [CLI metadata spec](https://github.com/Causet-Inc/Causet/tree/main/apps/causet-cli/internal/templates/metadata.go).
 
 ---
 
-## Publish
+## Validate locally
 
 ```bash
-cd /Users/patrick.mcdonald/pats_tools/causet-templates
-git add .
-git commit -m "Update templates"
-git push origin main
+node scripts/validate.mjs
 ```
 
-Verify:
-
-```bash
-causet templates update
-causet templates list
-causet new wallets test-wallets
-```
+This checks `registry.json`, template paths, `causetFiles`, and that npm dependencies do not use `file:` URLs.
 
 ---
 
@@ -329,6 +332,7 @@ causet new wallets test-wallets
 | Demo can’t connect | Deploy first; check `.env` platform / app / fork |
 | AI demo fails | `causet secrets set openai --fork sandbox` |
 | Empty query results | Wait for projection worker after intent |
+| Browser demo blank | Serve over HTTP, not `file://`; run `npm run build:sdk` if SDK bundle missing |
 
 ```bash
 causet doctor
@@ -339,4 +343,6 @@ causet local logs
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+Apache-2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Copyright 2026 [Causet, Inc.](https://github.com/Causet-Inc)
