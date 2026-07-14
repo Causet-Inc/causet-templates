@@ -628,7 +628,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
     // file:// will fail in Chrome — show a clear banner instead of a stuck "Mock mode" badge.
     let createDemoClient;
     try {
-      ({ createDemoClient } = await import('../shared/causet-demo-client.mjs'));
+      ({ createDemoClient } = await import('./vendor/causet-demo-client.mjs'));
     } catch (err) {
       const badge = document.getElementById('conn-badge');
       const label = document.getElementById('conn-label');
@@ -640,10 +640,10 @@ causet inspect event FRAUD_DECISION_MADE</div>
         banner.className = 'demo-banner warn';
         banner.innerHTML =
           'Open via HTTP, not <code>file://</code>. From repo:<br>' +
-          '<code>cd examples && npm run demo:fraud</code><br>' +
-          'then <code>http://localhost:8788/ai-fraud-detection/demo.html</code>';
+          '<code>npm install && npm run build:sdk</code><br>' +
+          'then serve this folder over HTTP, e.g. <code>python3 -m http.server 3457</code>';
       }
-      console.error('Failed to load causet-demo-client.mjs — use npm run demo:fraud', err);
+      console.error('Failed to load causet-demo-client.mjs — serve demos/ over HTTP (npm run serve)', err);
       throw err;
     }
 
@@ -677,7 +677,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
       location: 'Tokyo, JP',
       previous_location: 'New Jersey, US',
       velocity: { attempts: 4, window_minutes: 7 },
-      cardholder: { name: 'Patrick M.', home_region: 'New Jersey, US', typical_transaction_amount: 72.40 },
+      cardholder: { name: 'Alex R.', home_region: 'New Jersey, US', typical_transaction_amount: 72.40 },
       velocity_attempts: 4,
       velocity_window_minutes: 7,
       cardholder_home_region: 'New Jersey, US',

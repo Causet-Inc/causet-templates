@@ -106,12 +106,11 @@
         "hello",
         "tutorial"
       ],
-      "runtime": "node",
-      "language": "typescript",
+      "runtime": "causet",
+      "language": "causet",
       "requires": {
         "causetCli": ">=1.0.0",
         "causetCompiler": ">=1.0.0",
-        "node": ">=20",
         "docker": false,
         "openaiKey": false
       }
@@ -119,7 +118,7 @@
     {
       "id": "audit-log-api",
       "name": "Audit Log API",
-      "description": "Append-only audit trail with timeline queries and a thin HTTP API.",
+      "description": "Append-only audit trail with timeline projections and named queries.",
       "category": "quickstarts",
       "difficulty": "beginner",
       "path": "quickstarts/audit-log-api",
@@ -127,15 +126,13 @@
         "quickstart",
         "audit",
         "timeline",
-        "api",
         "log"
       ],
-      "runtime": "node",
-      "language": "typescript",
+      "runtime": "causet",
+      "language": "causet",
       "requires": {
         "causetCli": ">=1.0.0",
         "causetCompiler": ">=1.0.0",
-        "node": ">=20",
         "docker": false,
         "openaiKey": false
       }

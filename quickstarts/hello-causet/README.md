@@ -35,27 +35,14 @@ CREATE_GREETING / UPDATE_GREETING   (actions — intents)
 
 - Causet CLI installed
 - Local stack running **or** a hosted sandbox (`causet login`)
-- Node.js 20+
 
 ## Setup
 
 ```bash
 cd {{projectName}}
-npm install --prefix app
-cp .env.example .env   # edit platform / application if needed
 
-```
-
-Point the CLI at your environment, then compile and deploy:
-
-```bash
-# Local open mode
-causet context use env local
-
-# Compile Product DSL → IR
+causet context use env local   # or causet login for hosted
 causet build compile --runtime causet --out dist
-
-# Deploy to the sandbox fork
 causet deploy --fork {{causetFork}} --yes
 ```
 
@@ -64,20 +51,6 @@ If deploy says a release already exists:
 ```bash
 causet deploy activate --tag 1.0.0 --fork {{causetFork}} --mode FULL
 ```
-
-## Walkthrough (browser)
-
-Open the visual demo against your local API:
-
-```bash
-# from the project root (after deploy)
-open demo.html
-# or: python3 -m http.server 3457   → http://localhost:3457/demo.html
-```
-
-Use **Check connection**, then **Submit CREATE_GREETING**. The page highlights Intent → Event → Projection → Query and fills the greetings table.
-
-Connection defaults match `.env.example` (`http://localhost:8085`, platform `test-platform`, fork `{{causetFork}}`).
 
 ## Walkthrough (CLI)
 
@@ -122,29 +95,8 @@ causet query get_greeting --param greeting_id=greet-1 --fork {{causetFork}}
 
 You should see `updated_count` increment and `message` change.
 
-## Walkthrough (TypeScript)
-
-```bash
-npm run dev --prefix app
-```
-
-The script submits `CREATE_GREETING` + `UPDATE_GREETING`, then runs `get_greeting` / `list_greetings` against your configured API.
-
-Configure via `.env` (copy from `.env.example`):
-
-| Variable | Default |
-|----------|---------|
-| `CAUSET_API_URL` | `http://localhost:8085` |
-| `CAUSET_PLATFORM` | `test-platform` |
-| `CAUSET_APPLICATION` | `{{packageName}}` |
-| `CAUSET_FORK` | `{{causetFork}}` |
-
-## Sample payloads
-
-See `sample-intents/` for ready-made JSON bodies.
-
 ## Next steps
 
-- Try `causet templates list` and scaffold **audit-log-api** (timeline + HTTP API).
+- Try `causet templates list` and scaffold **audit-log-api** (append-only timeline).
 - Add a second projection field or a `where` filter on `list_greetings`.
 - Read the mental model: intents never wait on projections — design for eventual consistency on reads.

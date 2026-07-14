@@ -533,7 +533,7 @@
     // file:// will fail in Chrome — show a clear banner instead of a stuck "Mock mode" badge.
     let createDemoClient;
     try {
-      ({ createDemoClient } = await import('../shared/causet-demo-client.mjs'));
+      ({ createDemoClient } = await import('./vendor/causet-demo-client.mjs'));
     } catch (err) {
       const badge = document.getElementById('conn-badge');
       const label = document.getElementById('conn-label');
@@ -545,10 +545,10 @@
         banner.className = 'demo-banner warn';
         banner.innerHTML =
           'Open via HTTP, not <code>file://</code>. From repo:<br>' +
-          '<code>cd examples && npm run demo:support</code><br>' +
-          'then <code>http://localhost:8787/{{packageName}}/demo.html</code>';
+          '<code>npm install && npm run build:sdk</code><br>' +
+          'then serve this folder over HTTP, e.g. <code>python3 -m http.server 3457</code>';
       }
-      console.error('Failed to load causet-demo-client.mjs — use npm run demo:support', err);
+      console.error('Failed to load causet-demo-client.mjs — serve demos/ over HTTP (npm run demo:support)', err);
       throw err;
     }
 

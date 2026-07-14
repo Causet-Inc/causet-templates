@@ -1,5 +1,3 @@
-node_modules/
 dist/
 *.tar.gz
-.env
 .causet/config.yaml

@@ -25,7 +25,7 @@ CARD_TRANSACTION_AUTHORIZED
 
 ```bash
 cd {{projectName}}
-npm install --prefix app
+npm install
 cp .env.example .env
 
 causet context use env local   # or causet login
@@ -38,7 +38,7 @@ causet deploy --fork {{causetFork}} --yes
 
 ```bash
 open demo.html
-# or: python3 -m http.server 3457 → http://localhost:3457/demo.html
+# Serve over HTTP (required for @causet/sdk bundle): python3 -m http.server 3457
 ```
 
 Connection defaults: `http://localhost:8085` · `local-platform` · `{{packageName}}` · `{{causetFork}}`.

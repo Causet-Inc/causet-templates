@@ -25,7 +25,7 @@ CREATE_TICKET
 
 ```bash
 cd {{projectName}}
-npm install --prefix app
+npm install
 cp .env.example .env
 
 causet context use env local
@@ -38,6 +38,7 @@ causet deploy --fork {{causetFork}} --yes
 
 ```bash
 open demo.html
+# Serve over HTTP (required for @causet/sdk bundle): python3 -m http.server 3457
 ```
 
 Use **Live** mode, submit a ticket, and watch triage results land in the queue panel.
