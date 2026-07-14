@@ -43,7 +43,7 @@ function configJson() {
   return {
     apiUrl: env.CAUSET_API_URL || process.env.CAUSET_API_URL || "http://localhost:8085",
     realtimeUrl: env.CAUSET_REALTIME_URL || process.env.CAUSET_REALTIME_URL || "http://localhost:8081",
-    platform: env.CAUSET_PLATFORM || process.env.CAUSET_PLATFORM || "test-platform",
+    platform: env.CAUSET_PLATFORM || process.env.CAUSET_PLATFORM || "local-platform",
     application: env.CAUSET_APPLICATION || process.env.CAUSET_APPLICATION || "my-wallets",
     fork: env.CAUSET_FORK || process.env.CAUSET_FORK || "sandbox",
     apiKey: env.CAUSET_API_KEY || process.env.CAUSET_API_KEY || "",

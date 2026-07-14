@@ -154,6 +154,6 @@ app.listen(PORT, () => {
   ───────────────────────
   Dashboard: http://localhost:${PORT}
   Legacy:    in-memory CRUD (stale cache demo)
-  Causet:    ${process.env.CAUSET_PLATFORM || "test-platform"}/${process.env.CAUSET_APPLICATION || "{{packageName}}"} @ ${process.env.CAUSET_FORK || "{{causetFork}}"}
+  Causet:    ${process.env.CAUSET_PLATFORM || "local-platform"}/${process.env.CAUSET_APPLICATION || "{{packageName}}"} @ ${process.env.CAUSET_FORK || "{{causetFork}}"}
   `);
 });

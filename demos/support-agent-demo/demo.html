@@ -502,7 +502,7 @@
           <div class="log-entry">
             <span class="log-time">—</span>
             <span class="log-type api">Ready</span>
-            <div style="margin-top:4px;color:var(--muted)">Live mode polls queries every second. Defaults: test-platform / {{packageName}} / {{causetFork}} @ localhost:8085. Override with ?platform=&amp;application=&amp;fork=&amp;mode=live</div>
+            <div style="margin-top:4px;color:var(--muted)">Live mode polls queries every second. Defaults: local-platform / {{packageName}} / {{causetFork}} @ localhost:8085. Override with ?platform=&amp;application=&amp;fork=&amp;mode=live</div>
           </div>
         </div>
         <div class="btn-row">
@@ -578,7 +578,7 @@
     const DEFAULT_API_KEY = '';
     const LOCAL_DEFAULTS = {
       apiBase: 'http://localhost:8085',
-      platform: 'test-platform',
+      platform: 'local-platform',
       application: '{{packageName}}',
       forkId: '{{causetFork}}',
     };

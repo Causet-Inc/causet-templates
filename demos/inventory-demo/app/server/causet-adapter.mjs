@@ -5,7 +5,7 @@
 
 const LOCAL_DEFAULTS = {
   apiUrl: "http://localhost:8085",
-  platform: "test-platform",
+  platform: "local-platform",
   application: "{{packageName}}",
   forkId: "{{causetFork}}",
 };

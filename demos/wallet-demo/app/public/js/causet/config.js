@@ -7,7 +7,7 @@ export function readConfig() {
   return {
     apiBase: ($("apiBase")?.value || "http://localhost:8085").replace(/\/+$/, ""),
     realtimeBase: ($("realtimeBase")?.value || "http://localhost:8081").replace(/\/+$/, ""),
-    platform: ($("platform")?.value || "test-platform").trim(),
+    platform: ($("platform")?.value || "local-platform").trim(),
     application: ($("application")?.value || "my-wallets").trim(),
     fork: ($("fork")?.value || "sandbox").trim(),
     apiKey: ($("apiKey")?.value || "").trim(),

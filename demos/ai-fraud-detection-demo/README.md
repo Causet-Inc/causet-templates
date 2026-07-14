@@ -41,7 +41,7 @@ open demo.html
 # or: python3 -m http.server 3457 → http://localhost:3457/demo.html
 ```
 
-Connection defaults: `http://localhost:8085` · `test-platform` · `{{packageName}}` · `{{causetFork}}`.
+Connection defaults: `http://localhost:8085` · `local-platform` · `{{packageName}}` · `{{causetFork}}`.
 
 Click **Run** on a sample transaction (Tokyo + velocity is designed to trigger BLOCK). Watch the intent, AI decision, emits, and query panels update.
 

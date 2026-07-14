@@ -545,7 +545,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
       <div id="connection-panel" hidden>
         <select id="cfg-mode"><option value="live" selected>live</option><option value="mock">mock</option></select>
         <select id="cfg-cloud-env"><option value="local" selected>local</option><option value="sandbox">sandbox</option><option value="prod">prod</option></select>
-        <input id="cfg-platform" value="test-platform" />
+        <input id="cfg-platform" value="local-platform" />
         <input id="cfg-application" value="{{packageName}}" />
         <input id="cfg-fork" value="sandbox" />
         <input id="cfg-api-base" value="http://localhost:8085" />
@@ -571,7 +571,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
       <div class="card">
         <h3>Runtime log</h3>
         <div class="log" id="event-log">
-          <div class="log-entry empty">Local: deploy {{projectName}} to test-platform / {{packageName}} / {{causetFork}}, then Run. Fork must match the deployed fork (not main unless you deployed there).</div>
+          <div class="log-entry empty">Local: deploy {{projectName}} to local-platform / {{packageName}} / {{causetFork}}, then Run. Fork must match the deployed fork (not main unless you deployed there).</div>
         </div>
       </div>
     </aside>
@@ -660,7 +660,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
     const LOCAL_DEFAULTS = {
       cloudEnv: 'local',
       apiBase: 'http://localhost:8085',
-      platform: 'test-platform',
+      platform: 'local-platform',
       application: '{{packageName}}',
       forkId: '{{causetFork}}',
     };
@@ -1918,7 +1918,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
       const entityId = ($('transaction-id')?.value || 'txn_9K4').trim() || 'txn_9K4';
       const fork = config.forkId || 'sandbox';
       const app = config.application || 'ai-fraud-detection';
-      const platform = config.platform || 'test-platform';
+      const platform = config.platform || 'local-platform';
       const cmds = $('run-confirm-commands');
       if (cmds) {
         cmds.textContent =
