@@ -1,0 +1,17 @@
+# Audit Log API — {{projectName}}
+# Template: {{templateId}}
+#
+# Pattern: append-only audit trail via intents → events → timeline projection → queries.
+# The TypeScript app exposes a thin HTTP API over those intents/queries.
+#
+#   causet build compile --runtime causet --out dist
+
+dsl_version: 1
+app: "{{packageName}}"
+
+includes:
+  states:      [./states/**/*.state.causet]
+  events:      [./events/**/*.events.causet]
+  actions:     [./actions/**/*.actions.causet]
+  projections: [./projections/**/*.projections.causet]
+  queries:     [./queries/**/*.queries.causet]

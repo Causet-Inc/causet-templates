@@ -1,0 +1,42 @@
+{
+  "id": "audit-log-api",
+  "name": "Audit Log API",
+  "version": "1.0.0",
+  "description": "Append-only audit trail with intents, timeline queries, and a thin HTTP API.",
+  "category": "quickstarts",
+  "difficulty": "beginner",
+  "tags": [
+    "quickstart",
+    "audit",
+    "timeline",
+    "api",
+    "log",
+    "beginner"
+  ],
+  "language": "typescript",
+  "runtime": "node",
+  "entrypoint": "app/src/index.ts",
+  "causetFiles": [
+    "causet/app.causet",
+    "causet/states/audit.state.causet",
+    "causet/events/audit.events.causet",
+    "causet/actions/audit.actions.causet",
+    "causet/projections/audit.projections.causet",
+    "causet/queries/audit.queries.causet"
+  ],
+  "requires": {
+    "causetCli": ">=1.0.0",
+    "causetCompiler": ">=1.0.0",
+    "node": ">=20",
+    "docker": false,
+    "openaiKey": false
+  },
+  "secrets": [],
+  "commands": {
+    "install": "npm install --prefix app",
+    "dev": "npm run dev --prefix app",
+    "compile": "causet build compile --runtime causet --out dist",
+    "deploy": "causet deploy --fork {{causetFork}}"
+  },
+  "postCreateMessage": "Compile with `causet build compile --runtime causet --out dist`, deploy, then `npm run dev --prefix app`."
+}

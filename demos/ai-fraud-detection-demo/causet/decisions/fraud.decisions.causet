@@ -1,0 +1,84 @@
+# AI decision contract — fraud_screening
+#
+# Invoked from CARD_TRANSACTION_AUTHORIZED side_effects via op: decision.
+# Runtime merges input + validated LLM output, then emits FRAUD_DECISION_MADE.
+#
+# dashboard_id is passed from the action (constant "global") so projection rows
+# for fraud_dashboard always share primary key dashboard_id=global.
+
+decisions:
+  fraud_screening:
+    provider: reasoning
+    prompt: fraud_screening_v1
+    emits: FRAUD_DECISION_MADE
+    input:
+      # Transaction context sent to the LLM (mapped from intent in the action)
+      transaction_id:
+        type: string
+        required: true
+      card_id:
+        type: string
+        required: true
+      customer_id:
+        type: string
+        required: true
+      amount:
+        type: number
+        required: true
+      currency:
+        type: string
+        required: true
+      merchant:
+        type: string
+        required: true
+      merchant_category:
+        type: string
+        required: true
+      merchant_risk:
+        type: string
+        required: true
+      location:
+        type: string
+        required: true
+      previous_location:
+        type: string
+        required: true
+      velocity_attempts:
+        type: integer
+        required: true
+      velocity_window_minutes:
+        type: integer
+        required: true
+      cardholder_home_region:
+        type: string
+        required: true
+      typical_transaction_amount:
+        type: number
+        required: true
+      # Carried into FRAUD_DECISION_MADE payload for fraud_dashboard projection PK
+      dashboard_id:
+        type: string
+        required: true
+    output:
+      # Validated against LLM JSON; copied into FRAUD_DECISION_MADE payload
+      decision:
+        type: string
+        required: true
+      fraud_score:
+        type: number
+        required: true
+      confidence:
+        type: number
+        required: true
+      reason:
+        type: string
+        required: true
+      risk_signals:
+        type: array
+        required: true
+      recommended_actions:
+        type: array
+        required: true
+      risk_level:
+        type: string
+        required: true

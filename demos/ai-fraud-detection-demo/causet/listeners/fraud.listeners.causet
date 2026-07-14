@@ -1,0 +1,85 @@
+# Entity listeners — synchronous reactions to committed emits.
+#
+# Listeners mutate transaction entity state (not projections). They power the demo
+# saga monitor via fraud_saga_* fields. Priority orders handlers when multiple
+# listeners fire for related events in the same commit wave.
+#
+# Projections (fraud.projections.causet) are separate — materialized async by Kafka.
+
+listeners:
+  - on: FRAUD_DECISION_MADE
+    priority: 0
+    mutate:
+      - op: set
+        field: latest_decision
+        value: event.payload.decision
+      - op: set
+        field: fraud_saga_status
+        value: started
+      - op: set
+        field: fraud_saga_decision
+        value: event.payload.decision
+      - op: set
+        field: fraud_saga_fraud_score
+        value: event.payload.fraud_score
+
+  - on: TRANSACTION_BLOCKED
+    priority: 1
+    mutate:
+      - op: set
+        field: status
+        value: blocked
+      - op: set
+        field: fraud_saga_last_step
+        value: block_transaction
+
+  - on: CARD_TEMPORARILY_FROZEN
+    priority: 2
+    mutate:
+      - op: set
+        field: fraud_saga_last_step
+        value: temporarily_freeze_card
+
+  - on: VERIFICATION_REQUESTED
+    priority: 3
+    mutate:
+      - op: set
+        field: fraud_saga_last_step
+        value: send_verification_request
+
+  - on: TRANSACTION_HELD_FOR_REVIEW
+    priority: 1
+    mutate:
+      - op: set
+        field: status
+        value: held_for_review
+      - op: set
+        field: fraud_saga_last_step
+        value: hold_transaction
+
+  - on: FRAUD_REVIEW_CREATED
+    priority: 2
+    mutate:
+      - op: set
+        field: fraud_saga_last_step
+        value: create_manual_review_case
+
+  - on: TRANSACTION_APPROVED
+    priority: 1
+    mutate:
+      - op: set
+        field: status
+        value: approved
+      - op: set
+        field: fraud_saga_last_step
+        value: approve_transaction
+
+  - on: FRAUD_DASHBOARD_UPDATED
+    priority: 10
+    mutate:
+      - op: set
+        field: fraud_saga_last_step
+        value: update_fraud_dashboard
+      - op: set
+        field: fraud_saga_status
+        value: complete

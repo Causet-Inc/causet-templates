@@ -1,0 +1,11 @@
+providers:
+  reasoning:
+    executor: openai
+    model: gpt-4o-mini
+    temperature: 0.2
+    max_tokens: 1024
+    timeout: 30s
+
+  embeddings:
+    executor: openai
+    model: text-embedding-3-small

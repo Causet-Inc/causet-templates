@@ -1,0 +1,62 @@
+projections:
+  inventory_dashboard:
+    description: Current stock levels per SKU and warehouse
+    source_events:
+      - POSITION_UPDATED
+    target:
+      table: inventory_dashboard
+      primary_key: [position_id]
+    fields:
+      position_id: TEXT
+      sku_id: TEXT
+      sku_name: TEXT
+      warehouse_id: TEXT
+      on_hand: BIGINT
+      reserved: BIGINT
+      available: BIGINT
+      reorder_point: BIGINT
+      updated_at: BIGINT
+    derive:
+      position_id: event.payload.position_id
+      sku_id: event.payload.sku_id
+      sku_name: event.payload.sku_name
+      warehouse_id: event.payload.warehouse_id
+      on_hand: event.payload.on_hand
+      reserved: event.payload.reserved
+      available: event.payload.available
+      reorder_point: event.payload.reorder_point
+      updated_at: event.ts
+    mutations:
+      POSITION_UPDATED:
+        op: upsert
+
+  movement_timeline:
+    description: Append-only inventory movement log
+    source_events:
+      - INVENTORY_TIMELINE_ENTRY
+    target:
+      table: movement_timeline
+      primary_key: [position_id, movement_type, event_ts]
+    fields:
+      position_id: TEXT
+      sku_id: TEXT
+      warehouse_id: TEXT
+      movement_type: TEXT
+      quantity: BIGINT
+      balance_after: BIGINT
+      reference: TEXT
+      status: TEXT
+      event_ts: BIGINT
+    derive:
+      position_id: event.payload.position_id
+      sku_id: event.payload.sku_id
+      warehouse_id: event.payload.warehouse_id
+      movement_type: event.payload.movement_type
+      quantity: event.payload.quantity
+      balance_after: event.payload.balance_after
+      reference: event.payload.reference
+      status: event.payload.status
+      event_ts: event.ts
+    mutations:
+      INVENTORY_TIMELINE_ENTRY:
+        op: upsert

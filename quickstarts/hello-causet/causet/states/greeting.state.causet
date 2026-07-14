@@ -1,0 +1,17 @@
+# Entity schema — the write-side source of truth for one greeting.
+# Stream id at runtime: greeting_stream (state name + "_stream").
+
+state:
+  greeting:
+    entity_key: greeting_id
+    description: "A single greeting message"
+    fields:
+      - name: message
+        type: string
+        default: ""
+      - name: status
+        type: string
+        default: "draft"
+      - name: updated_count
+        type: int
+        default: 0

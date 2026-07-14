@@ -1,0 +1,12 @@
+memories:
+  customer_history:
+    source_events:
+      - CUSTOMER_NOTE_RECORDED
+      - ORDER_PLACED
+    partition_by: customer_id
+    embedding:
+      provider: embeddings
+    content: |
+      [{{ event.type }}] customer={{ event.customer_id }}
+      note={{ event.note }} author={{ event.author }}
+      order={{ event.order_id }} total={{ event.total }} items={{ event.item_summary }}

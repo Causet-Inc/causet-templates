@@ -1,0 +1,31 @@
+# Named queries — executed by causet-query-service against projection tables.
+# Run with: causet query get_greeting --param greeting_id=greet-1 --fork {{causetFork}}
+
+queries:
+  get_greeting:
+    description: Fetch one greeting by id
+    from: greetings
+    input:
+      greeting_id: { type: string, required: true }
+    fields:
+      - greetings.greeting_id
+      - greetings.message
+      - greetings.status
+      - greetings.updated_count
+      - greetings.updated_at
+    where:
+      greeting_id: { eq: input.greeting_id }
+    limit: 1
+
+  list_greetings:
+    description: Recent greetings (newest first)
+    from: greetings
+    fields:
+      - greetings.greeting_id
+      - greetings.message
+      - greetings.status
+      - greetings.updated_count
+      - greetings.updated_at
+    order_by:
+      updated_at: desc
+    limit: 50

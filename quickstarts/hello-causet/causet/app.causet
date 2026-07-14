@@ -1,0 +1,18 @@
+# Hello Causet — your first product DSL app
+# Template: {{templateId}} · Project: {{projectName}}
+#
+# Mental model:
+#   action (intent) → entity state + emit event → projection row → named query
+#
+# Compile from the project root:
+#   causet build compile --runtime causet --out dist
+
+dsl_version: 1
+app: "{{packageName}}"
+
+includes:
+  states:      [./states/**/*.state.causet]
+  events:      [./events/**/*.events.causet]
+  actions:     [./actions/**/*.actions.causet]
+  projections: [./projections/**/*.projections.causet]
+  queries:     [./queries/**/*.queries.causet]

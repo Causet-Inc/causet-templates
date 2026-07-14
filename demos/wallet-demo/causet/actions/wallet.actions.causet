@@ -1,0 +1,197 @@
+# Single-wallet intents (open / fund / withdraw) + TRANSFER_START for envelopes.
+
+actions:
+  OPEN_WALLET:
+    state: wallet
+    entity_id_expr: event.wallet_id
+    description: Open a new wallet at zero balance
+    input:
+      wallet_id: { type: string, required: true }
+      owner: { type: string, required: true }
+      currency: { type: string, required: false }
+    preflight:
+      rules:
+        - name: require_owner
+          when:
+            expr: 'event.owner == ""'
+          then:
+            - op: reject
+              code: EMPTY_OWNER
+              message: "owner is required"
+        - name: not_already_open
+          when:
+            expr: 'entity.status == "open"'
+          then:
+            - op: reject
+              code: WALLET_ALREADY_OPEN
+              message: "Wallet is already open"
+    core:
+      rules:
+        - name: open
+          then:
+            - op: set
+              path: /owner
+              value: event.owner
+            - op: set
+              path: /currency
+              value: 'isnull(event.currency, "USD")'
+            - op: set
+              path: /status
+              value: "open"
+            - op: set
+              path: /visible/balance
+              value: 0
+            - op: set
+              path: /opened_at
+              value: event.ts
+            - op: emit
+              event_type: WALLET_OPENED
+              payload:
+                wallet_id: event.wallet_id
+                owner: event.owner
+                currency: 'isnull(event.currency, "USD")'
+                status: "open"
+                balance_after: 0
+
+  FUND_WALLET:
+    state: wallet
+    entity_id_expr: event.wallet_id
+    description: Load / receive money into a wallet (external credit)
+    input:
+      wallet_id: { type: string, required: true }
+      amount: { type: integer, required: true }
+      reference: { type: string, required: false }
+      movement_id: { type: string, required: true }
+    preflight:
+      rules:
+        - name: must_be_open
+          when:
+            expr: 'entity.status != "open"'
+          then:
+            - op: reject
+              code: WALLET_NOT_OPEN
+              message: "Open the wallet before funding"
+        - name: positive_amount
+          when:
+            expr: "event.amount <= 0"
+          then:
+            - op: reject
+              code: INVALID_AMOUNT
+              message: "amount must be positive"
+    core:
+      rules:
+        - name: credit
+          then:
+            - op: add
+              path: /visible/balance
+              value: event.amount
+            - op: emit
+              event_type: WALLET_FUNDED
+              payload:
+                wallet_id: event.wallet_id
+                owner: entity.owner
+                currency: entity.currency
+                status: entity.status
+                amount: event.amount
+                balance_after: entity.visible.balance
+                reference: 'isnull(event.reference, "")'
+                movement_id: event.movement_id
+
+  WITHDRAW_WALLET:
+    state: wallet
+    entity_id_expr: event.wallet_id
+    description: Withdraw money from a wallet (external debit)
+    input:
+      wallet_id: { type: string, required: true }
+      amount: { type: integer, required: true }
+      reference: { type: string, required: false }
+      movement_id: { type: string, required: true }
+    preflight:
+      rules:
+        - name: must_be_open
+          when:
+            expr: 'entity.status != "open"'
+          then:
+            - op: reject
+              code: WALLET_NOT_OPEN
+              message: "Open the wallet before withdrawing"
+        - name: positive_amount
+          when:
+            expr: "event.amount <= 0"
+          then:
+            - op: reject
+              code: INVALID_AMOUNT
+              message: "amount must be positive"
+        - name: sufficient_funds
+          when:
+            expr: "entity.visible.balance < event.amount"
+          then:
+            - op: reject
+              code: INSUFFICIENT_FUNDS
+              message: "Insufficient visible balance"
+    core:
+      rules:
+        - name: debit
+          then:
+            - op: sub
+              path: /visible/balance
+              value: event.amount
+            - op: emit
+              event_type: WALLET_WITHDRAWN
+              payload:
+                wallet_id: event.wallet_id
+                owner: entity.owner
+                currency: entity.currency
+                status: entity.status
+                amount: event.amount
+                balance_after: entity.visible.balance
+                reference: 'isnull(event.reference, "")'
+                movement_id: event.movement_id
+
+  # Starts the commit-envelope transfer (expanded by compiler into prepare/commit/abort rules)
+  TRANSFER_START:
+    state: transfer
+    entity_id_expr: intent.transfer_id
+    description: Send money between two wallets (two-phase commit envelope)
+    input:
+      transfer_id: { type: string, required: true }
+      envelope_id: { type: string, required: true }
+      seq: { type: integer, required: true }
+      from_wallet_id: { type: string, required: true }
+      to_wallet_id: { type: string, required: true }
+      amount: { type: integer, required: true }
+      created_at: { type: integer, required: true }
+    preflight:
+      rules:
+        - name: positive_amount
+          when:
+            expr: "event.amount <= 0"
+          then:
+            - op: reject
+              code: INVALID_AMOUNT
+              message: "amount must be positive"
+        - name: distinct_wallets
+          when:
+            expr: 'event.from_wallet_id == event.to_wallet_id'
+          then:
+            - op: reject
+              code: SAME_WALLET
+              message: "Cannot transfer to the same wallet"
+        - name: source_wallet_funds
+          then:
+            - op: lookup
+              into: /_tmp/source_wallet
+              stream: wallet_stream
+              entity_id_expr: event.from_wallet_id
+            - op: if
+              expr: 'entity._tmp.source_wallet.status != "open"'
+              then:
+                - op: reject
+                  code: WALLET_NOT_OPEN
+                  message: "Source wallet is not open"
+            - op: if
+              expr: "entity._tmp.source_wallet.visible.balance < event.amount"
+              then:
+                - op: reject
+                  code: INSUFFICIENT_FUNDS
+                  message: "Insufficient visible balance"

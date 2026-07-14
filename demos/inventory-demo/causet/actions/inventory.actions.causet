@@ -1,0 +1,348 @@
+actions:
+  RECEIVE_STOCK:
+    state: inventory_position
+    entity_id_expr: "concat(event.sku_id, ':', event.warehouse_id)"
+    description: Receive inbound stock at a warehouse
+    input:
+      sku_id: { type: string, required: true }
+      sku_name: { type: string, required: false }
+      warehouse_id: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      reference: { type: string, required: false }
+
+    preflight:
+      rules:
+        - name: reject_non_positive_qty
+          when:
+            expr: "event.quantity <= 0"
+          then:
+            - op: reject
+              code: INVALID_QUANTITY
+              message: "Quantity must be positive"
+
+    core:
+      rules:
+        - name: receive_stock
+          then:
+            - op: set
+              path: /position_id
+              value: "concat(event.sku_id, ':', event.warehouse_id)"
+            - op: set
+              path: /sku_id
+              value: event.sku_id
+            - op: set
+              path: /sku_name
+              value: "coalesce(event.sku_name, entity.sku_name, event.sku_id)"
+            - op: set
+              path: /warehouse_id
+              value: event.warehouse_id
+            - op: add
+              path: /on_hand
+              value: event.quantity
+              cap: { min: 0 }
+            - op: set
+              path: /last_movement_type
+              value: receive
+            - op: set
+              path: /last_movement_qty
+              value: event.quantity
+
+    side_effects:
+      rules:
+        - name: emit_received
+          then:
+            - op: emit
+              event_type: STOCK_RECEIVED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                quantity: event.quantity
+                reference: "coalesce(event.reference, '')"
+            - op: emit
+              event_type: INVENTORY_TIMELINE_ENTRY
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                movement_type: receive
+                quantity: event.quantity
+                balance_after: entity.on_hand
+                reference: "coalesce(event.reference, '')"
+                status: succeeded
+            - op: emit
+              event_type: POSITION_UPDATED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                sku_name: entity.sku_name
+                warehouse_id: entity.warehouse_id
+                on_hand: entity.on_hand
+                reserved: entity.reserved
+                available: "entity.on_hand - entity.reserved"
+                reorder_point: entity.reorder_point
+
+  ADJUST_STOCK:
+    state: inventory_position
+    entity_id_expr: "concat(event.sku_id, ':', event.warehouse_id)"
+    description: Cycle-count or damage adjustment (signed delta)
+    input:
+      sku_id: { type: string, required: true }
+      warehouse_id: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      reason: { type: string, required: false }
+
+    preflight:
+      rules:
+        - name: reject_zero_adjustment
+          when:
+            expr: "event.quantity == 0"
+          then:
+            - op: reject
+              code: INVALID_QUANTITY
+              message: "Adjustment quantity cannot be zero"
+        - name: reject_negative_result
+          when:
+            expr: "entity.on_hand + event.quantity < 0"
+          then:
+            - op: reject
+              code: INSUFFICIENT_STOCK
+              message: "Adjustment would drive on_hand below zero"
+
+    core:
+      rules:
+        - name: apply_adjustment
+          then:
+            - op: add
+              path: /on_hand
+              value: event.quantity
+              cap: { min: 0 }
+            - op: set
+              path: /last_movement_type
+              value: adjust
+            - op: set
+              path: /last_movement_qty
+              value: event.quantity
+
+    side_effects:
+      rules:
+        - name: emit_adjusted
+          then:
+            - op: emit
+              event_type: STOCK_ADJUSTED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                quantity: event.quantity
+                reason: "coalesce(event.reason, '')"
+            - op: emit
+              event_type: INVENTORY_TIMELINE_ENTRY
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                movement_type: adjust
+                quantity: event.quantity
+                balance_after: entity.on_hand
+                reference: "coalesce(event.reason, '')"
+                status: succeeded
+            - op: emit
+              event_type: POSITION_UPDATED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                sku_name: entity.sku_name
+                warehouse_id: entity.warehouse_id
+                on_hand: entity.on_hand
+                reserved: entity.reserved
+                available: "entity.on_hand - entity.reserved"
+                reorder_point: entity.reorder_point
+
+  RESERVE_STOCK:
+    state: inventory_position
+    entity_id_expr: "concat(event.sku_id, ':', event.warehouse_id)"
+    description: Reserve available stock for a sales order
+    input:
+      sku_id: { type: string, required: true }
+      warehouse_id: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      order_id: { type: string, required: true }
+
+    preflight:
+      rules:
+        - name: reject_non_positive_qty
+          when:
+            expr: "event.quantity <= 0"
+          then:
+            - op: reject
+              code: INVALID_QUANTITY
+              message: "Quantity must be positive"
+        - name: reject_insufficient_available
+          when:
+            expr: "(entity.on_hand - entity.reserved) < event.quantity"
+          then:
+            - op: reject
+              code: INSUFFICIENT_STOCK
+              message: "Not enough available stock to reserve"
+
+    core:
+      rules:
+        - name: reserve
+          then:
+            - op: add
+              path: /reserved
+              value: event.quantity
+              cap: { min: 0 }
+            - op: set
+              path: /last_movement_type
+              value: reserve
+            - op: set
+              path: /last_movement_qty
+              value: event.quantity
+
+    side_effects:
+      rules:
+        - name: emit_reserved
+          then:
+            - op: emit
+              event_type: STOCK_RESERVED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                quantity: event.quantity
+                order_id: event.order_id
+            - op: emit
+              event_type: INVENTORY_TIMELINE_ENTRY
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                movement_type: reserve
+                quantity: event.quantity
+                balance_after: entity.on_hand
+                reference: event.order_id
+                status: succeeded
+            - op: emit
+              event_type: POSITION_UPDATED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                sku_name: entity.sku_name
+                warehouse_id: entity.warehouse_id
+                on_hand: entity.on_hand
+                reserved: entity.reserved
+                available: "entity.on_hand - entity.reserved"
+                reorder_point: entity.reorder_point
+
+  TRANSFER_STOCK:
+    state: inventory_position
+    entity_id_expr: "concat(event.sku_id, ':', event.from_warehouse)"
+    description: Transfer stock between warehouses (source position)
+    input:
+      sku_id: { type: string, required: true }
+      sku_name: { type: string, required: false }
+      from_warehouse: { type: string, required: true }
+      to_warehouse: { type: string, required: true }
+      quantity: { type: integer, required: true }
+      transfer_id: { type: string, required: false }
+
+    preflight:
+      rules:
+        - name: reject_same_warehouse
+          when:
+            expr: "event.from_warehouse == event.to_warehouse"
+          then:
+            - op: reject
+              code: INVALID_TRANSFER
+              message: "Source and destination must differ"
+        - name: reject_non_positive_qty
+          when:
+            expr: "event.quantity <= 0"
+          then:
+            - op: reject
+              code: INVALID_QUANTITY
+              message: "Quantity must be positive"
+        - name: reject_insufficient_on_hand
+          when:
+            expr: "(entity.on_hand - entity.reserved) < event.quantity"
+          then:
+            - op: reject
+              code: INSUFFICIENT_STOCK
+              message: "Not enough available stock to transfer"
+
+    core:
+      rules:
+        - name: deduct_source
+          then:
+            - op: set
+              path: /position_id
+              value: "concat(event.sku_id, ':', event.from_warehouse)"
+            - op: set
+              path: /sku_id
+              value: event.sku_id
+            - op: set
+              path: /sku_name
+              value: "coalesce(event.sku_name, entity.sku_name, event.sku_id)"
+            - op: set
+              path: /warehouse_id
+              value: event.from_warehouse
+            - op: sub
+              path: /on_hand
+              value: event.quantity
+              cap: { min: 0 }
+            - op: set
+              path: /last_movement_type
+              value: transfer_out
+            - op: set
+              path: /last_movement_qty
+              value: event.quantity
+
+    side_effects:
+      rules:
+        - name: emit_transfer_out
+          then:
+            - op: emit
+              event_type: STOCK_TRANSFERRED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                from_warehouse: event.from_warehouse
+                to_warehouse: event.to_warehouse
+                quantity: event.quantity
+                transfer_id: "coalesce(event.transfer_id, '')"
+            - op: emit
+              event_type: INVENTORY_TIMELINE_ENTRY
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                warehouse_id: entity.warehouse_id
+                movement_type: transfer_out
+                quantity: event.quantity
+                balance_after: entity.on_hand
+                reference: "coalesce(event.transfer_id, '')"
+                status: succeeded
+            - op: emit
+              event_type: POSITION_UPDATED
+              payload:
+                position_id: entity.position_id
+                sku_id: entity.sku_id
+                sku_name: entity.sku_name
+                warehouse_id: entity.warehouse_id
+                on_hand: entity.on_hand
+                reserved: entity.reserved
+                available: "entity.on_hand - entity.reserved"
+                reorder_point: entity.reorder_point
+        - name: credit_destination
+          then:
+            - op: submit
+              intent_type: RECEIVE_STOCK
+              target_stream: inventory_position_stream
+              target_entity: "concat(event.sku_id, ':', event.to_warehouse)"
+              payload:
+                sku_id: event.sku_id
+                sku_name: "coalesce(event.sku_name, entity.sku_name, event.sku_id)"
+                warehouse_id: event.to_warehouse
+                quantity: event.quantity
+                reference: "concat('transfer:', coalesce(event.transfer_id, ''))"

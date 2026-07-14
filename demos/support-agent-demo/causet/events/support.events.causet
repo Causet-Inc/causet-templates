@@ -1,0 +1,44 @@
+events:
+  TICKET_CREATED:
+    state: ticket
+    entity_expr: event.ticket_id
+    payload:
+      ticket_id: string
+      customer_id: string
+      subject: string
+      body: string
+
+  TICKET_AI_TRIAGED:
+    state: ticket
+    entity_expr: event.ticket_id
+    payload:
+      ticket_id: string
+      customer_id: string
+      priority: string
+      category: string
+      summary: string
+      confidence: number
+
+  CUSTOMER_NOTE_RECORDED:
+    state: customer
+    entity_expr: event.customer_id
+    payload:
+      customer_id: string
+      note: string
+      author: string
+
+  TICKET_CLOSED:
+    state: ticket
+    entity_expr: event.ticket_id
+    payload:
+      ticket_id: string
+      status: string
+
+  ORDER_PLACED:
+    state: customer
+    entity_expr: event.customer_id
+    payload:
+      customer_id: string
+      order_id: string
+      total: number
+      item_summary: string

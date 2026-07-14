@@ -1,0 +1,12 @@
+events:
+  AUDIT_RECORDED:
+    state: audit_entry
+    entity_expr: event.entry_id
+    payload:
+      entry_id: string
+      actor: string
+      action: string
+      resource: string
+      note: string
+      recorded_at: integer
+    kind: event

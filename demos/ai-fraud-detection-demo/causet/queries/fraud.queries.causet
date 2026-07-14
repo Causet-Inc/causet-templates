@@ -1,0 +1,74 @@
+# Named queries — executed by causet-query-service against projection tables.
+#
+# POST …/forks/{fork}/queries/{slug}/run with optional input.* params.
+# Response items use table-qualified column names (e.g. fraud_dashboard.latest_decision).
+# Reads are eventually consistent — wait for projection worker after intent commit.
+
+queries:
+  fraud_dashboard:
+    description: Global fraud dashboard counters
+    from: fraud_dashboard
+    fields:
+      - fraud_dashboard.dashboard_id
+      - fraud_dashboard.flagged_transactions
+      - fraud_dashboard.blocked_transactions
+      - fraud_dashboard.review_transactions
+      - fraud_dashboard.approved_transactions
+      - fraud_dashboard.pending_verifications
+      - fraud_dashboard.latest_decision
+      - fraud_dashboard.latest_fraud_score
+      - fraud_dashboard.latest_transaction_id
+    limit: 1
+
+  customer_risk_profile:
+    description: Customer risk profile by customer_id
+    from: customer_risk_profile
+    input:
+      customer_id: { type: string, required: true }
+    fields:
+      - customer_risk_profile.customer_id
+      - customer_risk_profile.risk_level
+      - customer_risk_profile.latest_fraud_score
+      - customer_risk_profile.latest_decision
+      - customer_risk_profile.card_status
+      - customer_risk_profile.updated_at
+    where:
+      customer_id:
+        eq: input.customer_id
+    limit: 1
+
+  card_status:
+    description: Card status by card_id
+    from: card_status
+    input:
+      card_id: { type: string, required: true }
+    fields:
+      - card_status.card_id
+      - card_status.status
+      - card_status.latest_transaction_id
+      - card_status.latest_transaction_status
+      - card_status.updated_at
+    where:
+      card_id:
+        eq: input.card_id
+    limit: 1
+
+  transaction_timeline:
+    description: Fraud event timeline for a transaction
+    from: transaction_timeline
+    input:
+      transaction_id: { type: string, required: true }
+    fields:
+      - transaction_timeline.transaction_id
+      - transaction_timeline.event_type
+      - transaction_timeline.event_ts
+      - transaction_timeline.decision
+      - transaction_timeline.fraud_score
+      - transaction_timeline.card_id
+      - transaction_timeline.customer_id
+    where:
+      transaction_id:
+        eq: input.transaction_id
+    order_by:
+      event_ts: asc
+    limit: 50

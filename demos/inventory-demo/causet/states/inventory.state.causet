@@ -1,0 +1,34 @@
+# Inventory position — one entity per SKU × warehouse.
+
+state:
+  inventory_position:
+    entity_key: position_id
+    description: Stock position for a SKU at a warehouse
+    fields:
+      - name: position_id
+        type: string
+        default: ""
+      - name: sku_id
+        type: string
+        default: ""
+      - name: sku_name
+        type: string
+        default: ""
+      - name: warehouse_id
+        type: string
+        default: ""
+      - name: on_hand
+        type: int
+        default: 0
+      - name: reserved
+        type: int
+        default: 0
+      - name: reorder_point
+        type: int
+        default: 0
+      - name: last_movement_type
+        type: string
+        default: ""
+      - name: last_movement_qty
+        type: int
+        default: 0

@@ -1,0 +1,195 @@
+# Projection definitions — async read models (causet-projection-worker).
+#
+# Each projection upserts rows when source_events appear on Kafka.
+# derive: expressions must use event.payload.*, event.ts, event.type, lookup(), etc.
+# dashboard_id: "global" on emits ensures fraud_dashboard PK is always set.
+#
+# Query service reads these tables via fraud.queries.causet (eventually consistent).
+
+projections:
+  # Single-row ops dashboard (PK dashboard_id = global)
+  fraud_dashboard:
+    description: Global fraud ops counters and latest decision snapshot
+    source_events:
+      - FRAUD_DECISION_MADE
+      - TRANSACTION_BLOCKED
+      - TRANSACTION_HELD_FOR_REVIEW
+      - TRANSACTION_APPROVED
+      - CARD_TEMPORARILY_FROZEN
+      - VERIFICATION_REQUESTED
+      - FRAUD_DASHBOARD_UPDATED
+    target:
+      table: fraud_dashboard
+      primary_key: [dashboard_id]
+    fields:
+      dashboard_id: TEXT
+      flagged_transactions: BIGINT
+      blocked_transactions: BIGINT
+      review_transactions: BIGINT
+      approved_transactions: BIGINT
+      pending_verifications: BIGINT
+      latest_decision: TEXT
+      latest_fraud_score: DOUBLE
+      latest_transaction_id: TEXT
+    derive:
+      dashboard_id: event.payload.dashboard_id
+      latest_decision: event.payload.decision
+      latest_fraud_score: event.payload.fraud_score
+      latest_transaction_id: event.payload.transaction_id
+    aggregates:
+      FRAUD_DECISION_MADE:
+        flagged_transactions: { op: add, by: 1 }
+      TRANSACTION_BLOCKED:
+        blocked_transactions: { op: add, by: 1 }
+        flagged_transactions: { op: add, by: 1 }
+      TRANSACTION_HELD_FOR_REVIEW:
+        review_transactions: { op: add, by: 1 }
+        flagged_transactions: { op: add, by: 1 }
+      TRANSACTION_APPROVED:
+        approved_transactions: { op: add, by: 1 }
+      VERIFICATION_REQUESTED:
+        pending_verifications: { op: add, by: 1 }
+    mutations:
+      FRAUD_DECISION_MADE:
+        op: upsert
+      TRANSACTION_BLOCKED:
+        op: upsert
+      TRANSACTION_HELD_FOR_REVIEW:
+        op: upsert
+      TRANSACTION_APPROVED:
+        op: upsert
+      CARD_TEMPORARILY_FROZEN:
+        op: upsert
+      VERIFICATION_REQUESTED:
+        op: upsert
+      FRAUD_DASHBOARD_UPDATED:
+        op: upsert
+
+  # Per-customer rollup — demo customer_risk_profile query
+  customer_risk_profile:
+    description: Per-customer fraud risk snapshot
+    source_events:
+      - FRAUD_DECISION_MADE
+      - CARD_TEMPORARILY_FROZEN
+    target:
+      table: customer_risk_profile
+      primary_key: [customer_id]
+    fields:
+      customer_id: TEXT
+      risk_level: TEXT
+      latest_fraud_score: DOUBLE
+      latest_decision: TEXT
+      card_status: TEXT
+      updated_at: BIGINT
+    derive:
+      customer_id: event.payload.customer_id
+      risk_level: event.payload.risk_level
+      latest_fraud_score: event.payload.fraud_score
+      latest_decision: event.payload.decision
+      # Cross-stream read: current transaction status from ledger entity
+      card_status: lookup(transaction, event.payload.transaction_id).status
+      updated_at: event.ts
+    mutations:
+      FRAUD_DECISION_MADE:
+        op: upsert
+      CARD_TEMPORARILY_FROZEN:
+        op: upsert
+        set:
+          card_status: temporarily_frozen
+
+  # Per-card status — demo card_status query
+  card_status:
+    description: Per-card status and latest transaction outcome
+    source_events:
+      - FRAUD_DECISION_MADE
+      - TRANSACTION_BLOCKED
+      - TRANSACTION_HELD_FOR_REVIEW
+      - TRANSACTION_APPROVED
+      - CARD_TEMPORARILY_FROZEN
+    target:
+      table: card_status
+      primary_key: [card_id]
+    fields:
+      card_id: TEXT
+      status: TEXT
+      latest_transaction_id: TEXT
+      latest_transaction_status: TEXT
+      updated_at: BIGINT
+    derive:
+      card_id: event.payload.card_id
+      latest_transaction_id: event.payload.transaction_id
+      updated_at: event.ts
+    mutations:
+      FRAUD_DECISION_MADE:
+        op: upsert
+        set:
+          latest_transaction_status: event.payload.decision
+      TRANSACTION_BLOCKED:
+        op: upsert
+        set:
+          status: blocked
+          latest_transaction_status: blocked
+      TRANSACTION_HELD_FOR_REVIEW:
+        op: upsert
+        set:
+          status: active
+          latest_transaction_status: held_for_review
+      TRANSACTION_APPROVED:
+        op: upsert
+        set:
+          status: active
+          latest_transaction_status: approved
+      CARD_TEMPORARILY_FROZEN:
+        op: upsert
+        set:
+          status: temporarily_frozen
+          latest_transaction_status: blocked
+
+  # Append-only audit trail — demo transaction_timeline query
+  transaction_timeline:
+    description: Append-only transaction fraud event log
+    source_events:
+      - FRAUD_DECISION_MADE
+      - TRANSACTION_BLOCKED
+      - TRANSACTION_HELD_FOR_REVIEW
+      - TRANSACTION_APPROVED
+      - CARD_TEMPORARILY_FROZEN
+      - VERIFICATION_REQUESTED
+      - FRAUD_REVIEW_CREATED
+      - FRAUD_DASHBOARD_UPDATED
+    target:
+      table: transaction_timeline
+      primary_key: [transaction_id, event_type, event_ts]
+    fields:
+      transaction_id: TEXT
+      event_type: TEXT
+      event_ts: BIGINT
+      decision: TEXT
+      fraud_score: DOUBLE
+      card_id: TEXT
+      customer_id: TEXT
+    derive:
+      transaction_id: event.payload.transaction_id
+      event_type: event.type
+      event_ts: event.ts
+      decision: event.payload.decision
+      fraud_score: event.payload.fraud_score
+      card_id: event.payload.card_id
+      customer_id: event.payload.customer_id
+    mutations:
+      FRAUD_DECISION_MADE:
+        op: upsert
+      TRANSACTION_BLOCKED:
+        op: upsert
+      TRANSACTION_HELD_FOR_REVIEW:
+        op: upsert
+      TRANSACTION_APPROVED:
+        op: upsert
+      CARD_TEMPORARILY_FROZEN:
+        op: upsert
+      VERIFICATION_REQUESTED:
+        op: upsert
+      FRAUD_REVIEW_CREATED:
+        op: upsert
+      FRAUD_DASHBOARD_UPDATED:
+        op: upsert

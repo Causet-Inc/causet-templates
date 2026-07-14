@@ -1,0 +1,88 @@
+# Domain events for the fraud authorization flow.
+#
+# All events target the transaction stream (entity = transaction_id).
+# Emitted from CARD_TRANSACTION_AUTHORIZED side_effects after op: decision completes.
+# Projection worker consumes these asynchronously — reads are eventually consistent.
+
+events:
+  # Auto-emitted by op: decision when fraud_screening completes (input + LLM output)
+  FRAUD_DECISION_MADE:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+      decision: string
+      fraud_score: number
+      confidence: number
+      reason: string
+      risk_signals: array
+      recommended_actions: array
+      risk_level: string
+      dashboard_id: string
+
+  # --- BLOCK branch (decision == BLOCK) ---
+  TRANSACTION_BLOCKED:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+      dashboard_id: string
+
+  TRANSACTION_HELD_FOR_REVIEW:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+      dashboard_id: string
+
+  TRANSACTION_APPROVED:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+      dashboard_id: string
+
+  CARD_TEMPORARILY_FROZEN:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+      dashboard_id: string
+
+  VERIFICATION_REQUESTED:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+      dashboard_id: string
+
+  # REVIEW branch only — manual review queue signal
+  FRAUD_REVIEW_CREATED:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      card_id: string
+      customer_id: string
+
+  # Always emitted last — closes fraud_response_saga (see listeners + sagas)
+  FRAUD_DASHBOARD_UPDATED:
+    state: transaction
+    entity_expr: event.transaction_id
+    payload:
+      transaction_id: string
+      decision: string
+      fraud_score: number
+      dashboard_id: string

@@ -1,0 +1,65 @@
+# RECORD_ACTION — the only write path for this quickstart.
+# Clients never insert into the timeline table; they submit this intent.
+
+actions:
+  RECORD_ACTION:
+    state: audit_entry
+    entity_id_expr: event.entry_id
+    description: Record an auditable action onto the timeline
+    input:
+      entry_id: { type: string, required: true }
+      actor: { type: string, required: true }
+      action: { type: string, required: true }
+      resource: { type: string, required: true }
+      note: { type: string, required: false }
+    preflight:
+      rules:
+        - name: require_actor
+          when:
+            expr: 'event.actor == ""'
+          then:
+            - op: reject
+              code: EMPTY_ACTOR
+              message: "actor is required"
+        - name: require_action
+          when:
+            expr: 'event.action == ""'
+          then:
+            - op: reject
+              code: EMPTY_ACTION
+              message: "action is required"
+        - name: require_resource
+          when:
+            expr: 'event.resource == ""'
+          then:
+            - op: reject
+              code: EMPTY_RESOURCE
+              message: "resource is required"
+    core:
+      rules:
+        - name: persist
+          then:
+            - op: set
+              path: /actor
+              value: event.actor
+            - op: set
+              path: /action
+              value: event.action
+            - op: set
+              path: /resource
+              value: event.resource
+            - op: set
+              path: /note
+              value: 'isnull(event.note, "")'
+            - op: set
+              path: /recorded_at
+              value: event.ts
+            - op: emit
+              event_type: AUDIT_RECORDED
+              payload:
+                entry_id: event.entry_id
+                actor: entity.actor
+                action: entity.action
+                resource: entity.resource
+                note: entity.note
+                recorded_at: entity.recorded_at

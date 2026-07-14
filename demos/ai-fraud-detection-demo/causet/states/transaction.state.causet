@@ -1,0 +1,55 @@
+# Transaction stream — one entity per authorization attempt (entity_key = transaction_id).
+#
+# Core fields are written by CARD_TRANSACTION_AUTHORIZED (core rules).
+# fraud_saga_* fields are updated by listeners as branch events arrive (demo saga monitor).
+# decisions.fraud_screening is populated at runtime by op: decision (not declared here).
+
+state:
+  transaction:
+    entity_key: transaction_id
+    fields:
+      # --- Intent payload persisted in core rules ---
+      - name: transaction_id
+        type: string
+        default: ""
+      - name: card_id
+        type: string
+        default: ""
+      - name: customer_id
+        type: string
+        default: ""
+      - name: amount
+        type: number
+        default: 0
+      - name: currency
+        type: string
+        default: "USD"
+      - name: merchant
+        type: string
+        default: ""
+      - name: merchant_category
+        type: string
+        default: ""
+      - name: location
+        type: string
+        default: ""
+      - name: status
+        type: string
+        default: "pending"   # pending → screening → blocked | held_for_review | approved
+
+      # --- Denormalized fraud snapshot (listeners) ---
+      - name: latest_decision
+        type: string
+        default: ""
+      - name: fraud_saga_status
+        type: string
+        default: "idle"      # idle → started → complete
+      - name: fraud_saga_decision
+        type: string
+        default: ""
+      - name: fraud_saga_fraud_score
+        type: number
+        default: 0
+      - name: fraud_saga_last_step
+        type: string
+        default: ""          # last saga step name, e.g. block_transaction

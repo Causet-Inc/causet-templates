@@ -1,0 +1,52 @@
+# Declarative saga — fraud_response_saga
+#
+# Documents the expected multi-step response to a fraud decision. State is stored
+# under _tmp/fraud_response_saga on the transaction entity. Listeners mirror the
+# same step names onto fraud_saga_* root fields for simpler querying in the demo.
+#
+# Steps are event-driven (not sequential guards) — only matching branch events fire.
+
+sagas:
+  fraud_response_saga:
+    state: transaction
+    state_path: _tmp/fraud_response_saga
+    steps:
+      - name: idle
+        set: { status: idle }
+
+      - name: started
+        on: FRAUD_DECISION_MADE
+        set: { status: started, decision: event.payload.decision }
+
+      # BLOCK path
+      - name: block_transaction
+        on: TRANSACTION_BLOCKED
+        set: { last_step: block_transaction }
+
+      - name: temporarily_freeze_card
+        on: CARD_TEMPORARILY_FROZEN
+        set: { last_step: temporarily_freeze_card }
+
+      - name: send_verification_request
+        on: VERIFICATION_REQUESTED
+        set: { last_step: send_verification_request }
+
+      # REVIEW path
+      - name: hold_transaction
+        on: TRANSACTION_HELD_FOR_REVIEW
+        set: { last_step: hold_transaction }
+
+      - name: create_manual_review_case
+        on: FRAUD_REVIEW_CREATED
+        set: { last_step: create_manual_review_case }
+
+      # ALLOW path
+      - name: approve_transaction
+        on: TRANSACTION_APPROVED
+        set: { last_step: approve_transaction }
+
+      # Terminal — always emitted after branch handling
+      - name: complete
+        on: FRAUD_DASHBOARD_UPDATED
+        set: { status: complete, last_step: update_fraud_dashboard }
+        end: true

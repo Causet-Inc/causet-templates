@@ -1,0 +1,112 @@
+actions:
+  CREATE_TICKET:
+    state: ticket
+    entity_id_expr: intent.ticket_id
+    description: Open a ticket and run AI triage with customer memory context
+    input:
+      ticket_id: { type: string, required: true }
+      customer_id: { type: string, required: true }
+      subject: { type: string, required: true }
+      body: { type: string, required: true }
+    core:
+      rules:
+        - name: persist_ticket_fields
+          then:
+            - op: set
+              path: /customer_id
+              value: intent.customer_id
+            - op: set
+              path: /subject
+              value: intent.subject
+            - op: set
+              path: /body
+              value: intent.body
+            - op: set
+              path: /status
+              value: open
+            - op: emit
+              event_type: TICKET_CREATED
+              payload:
+                ticket_id: intent.ticket_id
+                customer_id: intent.customer_id
+                subject: intent.subject
+                body: intent.body
+    side_effects:
+      rules:
+        - name: ai_triage
+          then:
+            - op: decision
+              ref: triage_ticket
+              input:
+                ticket_id: intent.ticket_id
+                customer_id: intent.customer_id
+                subject: intent.subject
+                body: intent.body
+
+  RECORD_CUSTOMER_NOTE:
+    state: customer
+    entity_id_expr: intent.customer_id
+    description: Append a CRM note (feeds customer_history memory via embedding ingestion)
+    input:
+      customer_id: { type: string, required: true }
+      note: { type: string, required: true }
+      author: { type: string, required: true }
+    core:
+      rules:
+        - name: record_note
+          then:
+            - op: emit
+              event_type: CUSTOMER_NOTE_RECORDED
+              payload:
+                customer_id: intent.customer_id
+                note: intent.note
+                author: intent.author
+
+  SIMULATE_ORDER:
+    state: customer
+    entity_id_expr: intent.customer_id
+    description: Demo commerce event to populate customer memory before triage
+    input:
+      customer_id: { type: string, required: true }
+      order_id: { type: string, required: true }
+      total: { type: number, required: true }
+      item_summary: { type: string, required: true }
+    core:
+      rules:
+        - name: emit_order
+          then:
+            - op: emit
+              event_type: ORDER_PLACED
+              payload:
+                customer_id: intent.customer_id
+                order_id: intent.order_id
+                total: intent.total
+                item_summary: intent.item_summary
+
+  CLOSE_TICKET:
+    state: ticket
+    entity_id_expr: intent.ticket_id
+    description: Mark ticket resolved without AI
+    input:
+      ticket_id: { type: string, required: true }
+    preflight:
+      rules:
+        - name: reject_already_closed
+          when:
+            expr: "entity.status == \"closed\""
+          then:
+            - op: reject
+              code: ALREADY_CLOSED
+              message: Ticket is already closed
+    core:
+      rules:
+        - name: close
+          then:
+            - op: set
+              path: /status
+              value: closed
+            - op: emit
+              event_type: TICKET_CLOSED
+              payload:
+                ticket_id: intent.ticket_id
+                status: closed

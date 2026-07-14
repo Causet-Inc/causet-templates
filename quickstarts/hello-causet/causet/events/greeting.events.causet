@@ -1,0 +1,23 @@
+# Domain events — immutable facts emitted after successful intent processing.
+# Projections subscribe to these via source_events.
+
+events:
+  GREETING_CREATED:
+    state: greeting
+    entity_expr: event.greeting_id
+    payload:
+      greeting_id: string
+      message: string
+      status: string
+      updated_count: integer
+    kind: event
+
+  GREETING_UPDATED:
+    state: greeting
+    entity_expr: event.greeting_id
+    payload:
+      greeting_id: string
+      message: string
+      status: string
+      updated_count: integer
+    kind: event

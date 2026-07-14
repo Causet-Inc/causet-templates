@@ -1,0 +1,37 @@
+{
+  "id": "wallets",
+  "name": "Wallets",
+  "version": "1.0.0",
+  "description": "Ledger wallets with fund, withdraw, and commit-envelope transfers.",
+  "category": "demos",
+  "difficulty": "intermediate",
+  "tags": ["demo", "wallets", "ledger", "local", "transfer"],
+  "language": "javascript",
+  "runtime": "node",
+  "entrypoint": "app/server.mjs",
+  "causetFiles": [
+    "causet/app.causet",
+    "causet/states/wallet.state.causet",
+    "causet/events/wallet.events.causet",
+    "causet/actions/wallet.actions.causet",
+    "causet/commit_envelopes/transfer.envelope.causet",
+    "causet/sagas/transfer.sagas.causet",
+    "causet/projections/wallet.projections.causet",
+    "causet/queries/wallet.queries.causet"
+  ],
+  "requires": {
+    "causetCli": ">=1.0.0",
+    "causetCompiler": ">=1.0.0",
+    "node": ">=20",
+    "docker": true,
+    "openaiKey": false
+  },
+  "secrets": [],
+  "commands": {
+    "install": "npm install --prefix app",
+    "dev": "npm run dev --prefix app",
+    "compile": "causet build compile --runtime causet --out dist",
+    "deploy": "causet deploy --fork {{causetFork}}"
+  },
+  "postCreateMessage": "Compile + deploy, then `npm run dev --prefix app` and open http://localhost:3850."
+}

@@ -1,0 +1,66 @@
+queries:
+  get_audit_entry:
+    description: Fetch one audit entry by id
+    from: audit_timeline
+    input:
+      entry_id: { type: string, required: true }
+    fields:
+      - audit_timeline.entry_id
+      - audit_timeline.actor
+      - audit_timeline.action
+      - audit_timeline.resource
+      - audit_timeline.note
+      - audit_timeline.recorded_at
+    where:
+      entry_id: { eq: input.entry_id }
+    limit: 1
+
+  list_actor_timeline:
+    description: Actions performed by one actor (newest first)
+    from: audit_timeline
+    input:
+      actor: { type: string, required: true }
+    fields:
+      - audit_timeline.entry_id
+      - audit_timeline.actor
+      - audit_timeline.action
+      - audit_timeline.resource
+      - audit_timeline.note
+      - audit_timeline.recorded_at
+    where:
+      actor: { eq: input.actor }
+    order_by:
+      recorded_at: desc
+    limit: 50
+
+  list_resource_timeline:
+    description: Actions against one resource (newest first)
+    from: audit_timeline
+    input:
+      resource: { type: string, required: true }
+    fields:
+      - audit_timeline.entry_id
+      - audit_timeline.actor
+      - audit_timeline.action
+      - audit_timeline.resource
+      - audit_timeline.note
+      - audit_timeline.recorded_at
+    where:
+      resource: { eq: input.resource }
+    order_by:
+      recorded_at: desc
+    limit: 50
+
+  list_recent:
+    description: Global recent audit entries
+    from: audit_timeline
+    fields:
+      - audit_timeline.entry_id
+      - audit_timeline.actor
+      - audit_timeline.action
+      - audit_timeline.resource
+      - audit_timeline.note
+      - audit_timeline.recorded_at
+    order_by:
+      recorded_at: desc
+    limit: 50

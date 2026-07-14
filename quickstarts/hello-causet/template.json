@@ -1,0 +1,43 @@
+{
+  "id": "hello-causet",
+  "name": "Hello Causet",
+  "version": "1.0.0",
+  "description": "Your first Causet app — intents, events, projections, and queries.",
+  "category": "quickstarts",
+  "difficulty": "beginner",
+  "tags": [
+    "quickstart",
+    "beginner",
+    "hello",
+    "tutorial",
+    "intent",
+    "projection",
+    "query"
+  ],
+  "language": "typescript",
+  "runtime": "node",
+  "entrypoint": "app/src/index.ts",
+  "causetFiles": [
+    "causet/app.causet",
+    "causet/states/greeting.state.causet",
+    "causet/events/greeting.events.causet",
+    "causet/actions/greeting.actions.causet",
+    "causet/projections/greeting.projections.causet",
+    "causet/queries/greeting.queries.causet"
+  ],
+  "requires": {
+    "causetCli": ">=1.0.0",
+    "causetCompiler": ">=1.0.0",
+    "node": ">=20",
+    "docker": false,
+    "openaiKey": false
+  },
+  "secrets": [],
+  "commands": {
+    "install": "npm install --prefix app",
+    "dev": "npm run dev --prefix app",
+    "compile": "causet build compile --runtime causet --out dist",
+    "deploy": "causet deploy --fork {{causetFork}}"
+  },
+  "postCreateMessage": "Compile with `causet build compile --runtime causet --out dist`, deploy, then `npm run dev --prefix app`."
+}

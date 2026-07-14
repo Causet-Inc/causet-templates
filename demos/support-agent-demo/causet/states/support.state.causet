@@ -1,0 +1,43 @@
+state:
+  ticket:
+    entity_key: ticket_id
+    description: Support ticket with AI triage metadata
+    fields:
+      - name: customer_id
+        type: string
+        default: ""
+      - name: subject
+        type: string
+        default: ""
+      - name: body
+        type: string
+        default: ""
+      - name: status
+        type: string
+        default: open
+      - name: priority
+        type: string
+        default: normal
+      - name: category
+        type: string
+        default: general
+      - name: ai_summary
+        type: string
+        default: ""
+      - name: ai_confidence
+        type: number
+        default: 0
+
+  customer:
+    entity_key: customer_id
+    description: Customer profile for memory partitioning
+    fields:
+      - name: display_name
+        type: string
+        default: ""
+      - name: tier
+        type: string
+        default: standard
+      - name: open_ticket_count
+        type: int
+        default: 0

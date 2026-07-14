@@ -1,0 +1,9 @@
+{
+  "transfer_id": "xfer-1",
+  "envelope_id": "xfer-1",
+  "seq": 1,
+  "from_wallet_id": "wallet-alice",
+  "to_wallet_id": "wallet-bob",
+  "amount": 1500,
+  "created_at": 1710000000000
+}

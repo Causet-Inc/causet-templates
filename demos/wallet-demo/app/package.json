@@ -1,0 +1,20 @@
+{
+  "name": "my-wallets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Wallets demo — UI → domain → @causet/sdk → Causet",
+  "scripts": {
+    "predev": "npm run bundle:sdk",
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "bundle:sdk": "node scripts/bundle-sdk.mjs"
+  },
+  "dependencies": {
+    "@causet/sdk": "file:../../../causet-sdks/packages/js",
+    "@causet/sdk-core": "file:../../../causet-sdks/packages/core"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

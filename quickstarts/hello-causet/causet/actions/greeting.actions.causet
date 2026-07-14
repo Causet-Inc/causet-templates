@@ -1,0 +1,87 @@
+# Actions (intents) — the only way clients write to Causet.
+#
+# Phases:
+#   preflight  — validate; reject aborts with a code (no ledger write)
+#   core       — mutate entity state + emit domain events (atomic with intent)
+#   side_effects — optional secondary work (not used in this quickstart)
+
+actions:
+  CREATE_GREETING:
+    state: greeting
+    entity_id_expr: event.greeting_id
+    description: Create a greeting
+    input:
+      greeting_id: { type: string, required: true }
+      message: { type: string, required: true }
+    preflight:
+      rules:
+        - name: require_message
+          when:
+            expr: 'event.message == ""'
+          then:
+            - op: reject
+              code: EMPTY_MESSAGE
+              message: "Message is required"
+    core:
+      rules:
+        - name: apply_greeting
+          when: {}
+          then:
+            - op: set
+              path: /message
+              value: event.message
+            - op: set
+              path: /status
+              value: "active"
+            - op: set
+              path: /updated_count
+              value: 0
+            - op: emit
+              event_type: GREETING_CREATED
+              payload:
+                greeting_id: event.greeting_id
+                message: entity.message
+                status: entity.status
+                updated_count: entity.updated_count
+
+  UPDATE_GREETING:
+    state: greeting
+    entity_id_expr: event.greeting_id
+    description: Update an existing greeting message
+    input:
+      greeting_id: { type: string, required: true }
+      message: { type: string, required: true }
+    preflight:
+      rules:
+        - name: require_message
+          when:
+            expr: 'event.message == ""'
+          then:
+            - op: reject
+              code: EMPTY_MESSAGE
+              message: "Message is required"
+        - name: must_exist
+          when:
+            expr: 'entity.status == "draft" && entity.message == ""'
+          then:
+            - op: reject
+              code: GREETING_NOT_FOUND
+              message: "Create the greeting before updating it"
+    core:
+      rules:
+        - name: apply_update
+          when: {}
+          then:
+            - op: set
+              path: /message
+              value: event.message
+            - op: add
+              path: /updated_count
+              value: 1
+            - op: emit
+              event_type: GREETING_UPDATED
+              payload:
+                greeting_id: event.greeting_id
+                message: entity.message
+                status: entity.status
+                updated_count: entity.updated_count

@@ -1,0 +1,48 @@
+{
+  "id": "ai-fraud-detection",
+  "name": "AI Fraud Detection",
+  "version": "1.0.0",
+  "description": "Card authorization with AI fraud screening, branch events, projections, and a live demo UI.",
+  "category": "demos",
+  "difficulty": "beginner",
+  "tags": ["demo", "ai", "fraud", "local", "decision"],
+  "language": "typescript",
+  "runtime": "node",
+  "entrypoint": "demo.html",
+  "causetFiles": [
+    "causet/app.causet",
+    "causet/states/transaction.state.causet",
+    "causet/events/fraud.events.causet",
+    "causet/actions/fraud.actions.causet",
+    "causet/providers/ai.providers.causet",
+    "causet/prompts/fraud.prompts.causet",
+    "causet/decisions/fraud.decisions.causet",
+    "causet/listeners/fraud.listeners.causet",
+    "causet/projections/fraud.projections.causet",
+    "causet/queries/fraud.queries.causet",
+    "causet/sagas/fraud.sagas.causet"
+  ],
+  "requires": {
+    "causetCli": ">=1.0.0",
+    "causetCompiler": ">=1.0.0",
+    "node": ">=20",
+    "docker": false,
+    "openaiKey": true
+  },
+  "secrets": [
+    {
+      "name": "openai",
+      "env": "OPENAI_API_KEY",
+      "required": true,
+      "description": "OpenAI key for fraud_screening decision (local/hosted)."
+    }
+  ],
+  "commands": {
+    "install": "npm install --prefix app",
+    "dev": "open demo.html",
+    "compile": "causet build compile --runtime causet --out dist",
+    "deploy": "causet deploy --fork {{causetFork}}",
+    "setSecrets": "causet secrets set openai --fork {{causetFork}}"
+  },
+  "postCreateMessage": "Set the OpenAI secret, compile + deploy, then open demo.html."
+}

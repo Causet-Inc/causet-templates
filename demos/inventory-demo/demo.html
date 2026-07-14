@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{templateName}} — {{projectName}}</title>
+  <style>
+    body {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      max-width: 640px; margin: 48px auto; padding: 0 20px;
+      color: #1c1917; background: #faf7f2; line-height: 1.5;
+    }
+    h1 { font-family: Georgia, serif; font-size: 1.8rem; }
+    p { color: #57534e; }
+    code { background: #f5f5f4; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    pre {
+      background: #1c1917; color: #fafaf9; padding: 16px; border-radius: 10px;
+      overflow: auto; font-size: 13px;
+    }
+    a.btn {
+      display: inline-block; margin-top: 12px; padding: 12px 16px;
+      background: #9a3412; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>{{templateName}}</h1>
+  <p>
+    The full WarePark UI (legacy CRUD vs Causet retrofit) is served by the Node app —
+    not this static file — so both modes can share one origin.
+  </p>
+  <pre>cd {{projectName}}
+npm install --prefix app
+causet build compile --runtime causet --out dist
+causet deploy --fork {{causetFork}} --yes
+npm run dev --prefix app</pre>
+  <p>Then open:</p>
+  <a class="btn" href="http://localhost:3848">http://localhost:3848</a>
+</body>
+</html>

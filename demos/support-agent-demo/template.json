@@ -1,0 +1,48 @@
+{
+  "id": "support-agent",
+  "name": "Support Agent",
+  "version": "1.0.0",
+  "description": "AI support copilot with ticket triage, memories, projections, and a live demo UI.",
+  "category": "demos",
+  "difficulty": "intermediate",
+  "tags": ["demo", "ai", "support", "local", "triage"],
+  "language": "typescript",
+  "runtime": "node",
+  "entrypoint": "demo.html",
+  "causetFiles": [
+    "causet/app.causet",
+    "causet/states/support.state.causet",
+    "causet/events/support.events.causet",
+    "causet/actions/support.actions.causet",
+    "causet/providers/ai.providers.causet",
+    "causet/prompts/triage.prompts.causet",
+    "causet/decisions/triage.decisions.causet",
+    "causet/memories/customer.memories.causet",
+    "causet/listeners/triage.listeners.causet",
+    "causet/projections/support.projections.causet",
+    "causet/queries/support.queries.causet"
+  ],
+  "requires": {
+    "causetCli": ">=1.0.0",
+    "causetCompiler": ">=1.0.0",
+    "node": ">=20",
+    "docker": false,
+    "openaiKey": true
+  },
+  "secrets": [
+    {
+      "name": "openai",
+      "env": "OPENAI_API_KEY",
+      "required": true,
+      "description": "OpenAI key for ticket triage decisions."
+    }
+  ],
+  "commands": {
+    "install": "npm install --prefix app",
+    "dev": "open demo.html",
+    "compile": "causet build compile --runtime causet --out dist",
+    "deploy": "causet deploy --fork {{causetFork}}",
+    "setSecrets": "causet secrets set openai --fork {{causetFork}}"
+  },
+  "postCreateMessage": "Set the OpenAI secret, compile + deploy, then open demo.html."
+}

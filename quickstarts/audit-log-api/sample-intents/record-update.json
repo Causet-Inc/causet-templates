@@ -1,0 +1,7 @@
+{
+  "entry_id": "entry-2",
+  "actor": "alice",
+  "action": "update",
+  "resource": "doc/42",
+  "note": "title change"
+}

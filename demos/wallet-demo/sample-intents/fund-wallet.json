@@ -1,0 +1,6 @@
+{
+  "wallet_id": "wallet-alice",
+  "amount": 10000,
+  "reference": "paycheck",
+  "movement_id": "fund-1"
+}

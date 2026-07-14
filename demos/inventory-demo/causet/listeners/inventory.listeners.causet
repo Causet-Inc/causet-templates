@@ -1,0 +1,21 @@
+listeners:
+  - on: STOCK_RECEIVED
+    priority: 0
+    mutate:
+      - op: set
+        field: last_movement_type
+        value: receive
+
+  - on: STOCK_RESERVED
+    priority: 1
+    mutate:
+      - op: set
+        field: last_movement_type
+        value: reserve
+
+  - on: STOCK_TRANSFERRED
+    priority: 2
+    mutate:
+      - op: set
+        field: last_movement_type
+        value: transfer_out

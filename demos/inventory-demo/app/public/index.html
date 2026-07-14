@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarePark Inventory — CRUD vs Causet</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">WP</div>
+      <div>
+        <h1>WarePark Inventory</h1>
+        <p>Legacy CRUD vs Causet retrofit</p>
+      </div>
+    </div>
+    <div class="mode-toggle" id="mode-toggle">
+      <button type="button" class="mode-btn active" data-mode="legacy">Legacy CRUD</button>
+      <button type="button" class="mode-btn" data-mode="causet">Causet Retrofit</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="main-col">
+      <div id="mode-banner" class="banner legacy"></div>
+      <div class="card table-wrap">
+        <div class="table-header">
+          <h2>Stock positions</h2>
+          <div class="action-bar">
+            <button type="button" class="btn btn-secondary btn-inline" data-open-modal="receive">Receive</button>
+            <button type="button" class="btn btn-secondary btn-inline" data-open-modal="reserve">Reserve</button>
+            <button type="button" class="btn btn-secondary btn-inline" data-open-modal="adjust">Adjust</button>
+            <button type="button" class="btn btn-secondary btn-inline" data-open-modal="transfer">Transfer</button>
+          </div>
+        </div>
+        <table id="inventory-table">
+          <thead>
+            <tr>
+              <th>SKU</th><th>Warehouse</th><th>On hand</th><th>Reserved</th><th>Available</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-body"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="side-col">
+      <div class="card">
+        <h3>Demo controls</h3>
+        <label class="check"><input type="checkbox" id="crash-transfer" /> Simulate legacy transfer crash</label>
+        <p class="hint">Legacy mode only — deducts source then throws. Causet transfer stays atomic.</p>
+        <button type="button" class="btn-ghost" id="reset-demo">Reset demo</button>
+      </div>
+      <div class="card" id="timeline-card">
+        <h3>Movement timeline</h3>
+        <div class="stream-status causet-only" id="stream-status">
+          <span class="stream-dot" id="stream-dot"></span>
+          <span id="stream-label">Connecting…</span>
+        </div>
+        <p class="hint causet-only">Live updates via SDK WebSocket → SSE. Projections refresh on stream events.</p>
+        <p class="hint legacy-only">Try order ID <code>VIP-CEO</code> to bypass stock checks (legacy hack).</p>
+        <div id="live-feed" class="live-feed causet-only" hidden></div>
+        <div id="timeline" class="timeline"></div>
+      </div>
+      <div class="card code-card">
+        <h3>Application code</h3>
+        <pre id="code-sample" class="code-sample"></pre>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+  <div id="modal-overlay" class="modal-overlay" hidden aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal></div>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">Action</h3>
+        <button type="button" class="modal-close" data-close-modal aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-pane" data-pane="receive" hidden>
+          <p class="modal-desc">Record inbound stock at a warehouse.</p>
+          <form id="form-receive" class="form"></form>
+        </div>
+        <div class="modal-pane" data-pane="reserve" hidden>
+          <p class="modal-desc">Reserve stock for a purchase — rejected if available stock is less than purchase quantity.</p>
+          <form id="form-reserve" class="form"></form>
+        </div>
+        <div class="modal-pane" data-pane="adjust" hidden>
+          <p class="modal-desc">Apply a cycle-count or damage adjustment (signed delta).</p>
+          <form id="form-adjust" class="form"></form>
+        </div>
+        <div class="modal-pane" data-pane="transfer" hidden>
+          <p class="modal-desc">Move stock between warehouses.</p>
+          <form id="form-transfer" class="form"></form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

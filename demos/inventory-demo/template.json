@@ -1,0 +1,36 @@
+{
+  "id": "inventory",
+  "name": "Inventory",
+  "version": "1.0.0",
+  "description": "WarePark inventory — legacy CRUD vs Causet retrofit with receive, reserve, and transfer.",
+  "category": "demos",
+  "difficulty": "beginner",
+  "tags": ["demo", "inventory", "warehouse", "local", "retrofit"],
+  "language": "typescript",
+  "runtime": "node",
+  "entrypoint": "app/server/index.mjs",
+  "causetFiles": [
+    "causet/app.causet",
+    "causet/states/inventory.state.causet",
+    "causet/events/inventory.events.causet",
+    "causet/actions/inventory.actions.causet",
+    "causet/listeners/inventory.listeners.causet",
+    "causet/projections/inventory.projections.causet",
+    "causet/queries/inventory.queries.causet"
+  ],
+  "requires": {
+    "causetCli": ">=1.0.0",
+    "causetCompiler": ">=1.0.0",
+    "node": ">=20",
+    "docker": false,
+    "openaiKey": false
+  },
+  "secrets": [],
+  "commands": {
+    "install": "npm install --prefix app",
+    "dev": "npm run dev --prefix app",
+    "compile": "causet build compile --runtime causet --out dist",
+    "deploy": "causet deploy --fork {{causetFork}}"
+  },
+  "postCreateMessage": "Compile + deploy, then `npm run dev --prefix app` and open http://localhost:3848."
+}

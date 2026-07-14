@@ -1,0 +1,144 @@
+{
+  "version": "1.0.0",
+  "templates": [
+    {
+      "id": "ai-fraud-detection",
+      "name": "AI Fraud Detection",
+      "description": "Card authorization with AI fraud screening, branch events, and a live demo UI.",
+      "category": "demos",
+      "difficulty": "beginner",
+      "path": "demos/ai-fraud-detection-demo",
+      "tags": [
+        "demo",
+        "ai",
+        "fraud",
+        "local"
+      ],
+      "runtime": "node",
+      "language": "typescript",
+      "requires": {
+        "causetCli": ">=1.0.0",
+        "causetCompiler": ">=1.0.0",
+        "node": ">=20",
+        "docker": true,
+        "openaiKey": true
+      }
+    },
+    {
+      "id": "support-agent",
+      "name": "Support Agent",
+      "description": "AI support copilot with ticket triage, memories, and a live demo UI.",
+      "category": "demos",
+      "difficulty": "intermediate",
+      "path": "demos/support-agent-demo",
+      "tags": [
+        "demo",
+        "ai",
+        "support",
+        "local"
+      ],
+      "runtime": "node",
+      "language": "typescript",
+      "requires": {
+        "causetCli": ">=1.0.0",
+        "causetCompiler": ">=1.0.0",
+        "node": ">=20",
+        "docker": true,
+        "openaiKey": true
+      }
+    },
+    {
+      "id": "inventory",
+      "name": "Inventory",
+      "description": "WarePark inventory \u2014 legacy CRUD vs Causet retrofit demo.",
+      "category": "demos",
+      "difficulty": "beginner",
+      "path": "demos/inventory-demo",
+      "tags": [
+        "demo",
+        "inventory",
+        "warehouse",
+        "local"
+      ],
+      "runtime": "node",
+      "language": "typescript",
+      "requires": {
+        "causetCli": ">=1.0.0",
+        "causetCompiler": ">=1.0.0",
+        "node": ">=20",
+        "docker": true,
+        "openaiKey": false
+      }
+    },
+    {
+      "id": "wallets",
+      "name": "Wallets",
+      "description": "Ledger wallets with fund, withdraw, and commit-envelope transfers.",
+      "category": "demos",
+      "difficulty": "intermediate",
+      "path": "demos/wallet-demo",
+      "tags": [
+        "demo",
+        "wallets",
+        "ledger",
+        "local"
+      ],
+      "runtime": "node",
+      "language": "javascript",
+      "requires": {
+        "causetCli": ">=1.0.0",
+        "causetCompiler": ">=1.0.0",
+        "node": ">=20",
+        "docker": true,
+        "openaiKey": false
+      }
+    },
+    {
+      "id": "hello-causet",
+      "name": "Hello Causet",
+      "description": "Your first Causet app \u2014 intents, events, projections, and queries.",
+      "category": "quickstarts",
+      "difficulty": "beginner",
+      "path": "quickstarts/hello-causet",
+      "tags": [
+        "quickstart",
+        "beginner",
+        "hello",
+        "tutorial"
+      ],
+      "runtime": "node",
+      "language": "typescript",
+      "requires": {
+        "causetCli": ">=1.0.0",
+        "causetCompiler": ">=1.0.0",
+        "node": ">=20",
+        "docker": false,
+        "openaiKey": false
+      }
+    },
+    {
+      "id": "audit-log-api",
+      "name": "Audit Log API",
+      "description": "Append-only audit trail with timeline queries and a thin HTTP API.",
+      "category": "quickstarts",
+      "difficulty": "beginner",
+      "path": "quickstarts/audit-log-api",
+      "tags": [
+        "quickstart",
+        "audit",
+        "timeline",
+        "api",
+        "log"
+      ],
+      "runtime": "node",
+      "language": "typescript",
+      "requires": {
+        "causetCli": ">=1.0.0",
+        "causetCompiler": ">=1.0.0",
+        "node": ">=20",
+        "docker": false,
+        "openaiKey": false
+      }
+    }
+  ]
+}

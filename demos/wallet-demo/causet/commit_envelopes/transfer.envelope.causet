@@ -1,0 +1,47 @@
+# Two-phase wallet transfer — source debits, dest credits, ledger records.
+# Compiler expands this into prepare / prepared / commit / abort rules.
+
+commit_envelopes:
+  wallet_transfer:
+    start_action: TRANSFER_START
+    envelope_state: transfer
+    envelope_state_path: envelope
+
+    lifecycle:
+      prepare_event: TRANSFER_PREPARE
+      prepared_event: TRANSFER_PREPARED
+      commit_event: TRANSFER_COMMIT
+      abort_event: TRANSFER_ABORT
+
+    timeout:
+      abort_after_seconds: 30
+      tick_event: CLOCK_TICK
+
+    causal_ordering:
+      mode: per_entity
+      cursor_field: /visible/causal/last_envelope_seq
+      seq_source: envelope.seq
+
+    participants:
+      - name: source_wallet
+        state: wallet
+        entity_expr: intent.from_wallet_id
+        delta_expr: 0 - event.amount
+        visibility_gate:
+          strategy: shadow_state
+          visible_path: /visible
+          pending_path: /pending_envelopes
+
+      - name: dest_wallet
+        state: wallet
+        entity_expr: intent.to_wallet_id
+        delta_expr: event.amount
+        visibility_gate:
+          strategy: shadow_state
+          visible_path: /visible
+          pending_path: /pending_envelopes
+
+      - name: ledger_entry
+        state: ledger
+        entity_expr: intent.transfer_id
+        participant_type: ledger

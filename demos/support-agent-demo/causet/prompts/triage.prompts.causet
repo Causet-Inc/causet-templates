@@ -1,0 +1,15 @@
+prompts:
+  triage_v1:
+    instructions: |
+      You are a support triage assistant. Classify the ticket and suggest priority.
+
+      Customer ID: {{ customer_id }}
+      Subject: {{ subject }}
+      Body:
+      {{ body }}
+
+      Relevant customer history (most recent first):
+      {{ memories.customer_history }}
+
+      Respond with JSON fields: priority (low|normal|high|urgent), category (billing|shipping|product|account|general),
+      summary (one sentence), confidence (0.0-1.0).

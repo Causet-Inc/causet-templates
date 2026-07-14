@@ -1,0 +1,207 @@
+projections:
+  wallet_balances:
+    description: Current wallet snapshot (lifecycle intents)
+    source_events:
+      - WALLET_OPENED
+      - WALLET_FUNDED
+      - WALLET_WITHDRAWN
+    target:
+      table: wallet_balances
+      primary_key: [wallet_id]
+    fields:
+      wallet_id: TEXT
+      owner: TEXT
+      currency: TEXT
+      status: TEXT
+      balance: BIGINT
+      updated_at: BIGINT
+    derive:
+      wallet_id: event.payload.wallet_id
+      owner: event.payload.owner
+      currency: event.payload.currency
+      status: event.payload.status
+      balance: event.payload.balance_after
+      updated_at: event.ts
+    mutations:
+      WALLET_OPENED: { op: upsert }
+      WALLET_FUNDED: { op: upsert }
+      WALLET_WITHDRAWN: { op: upsert }
+    indexes:
+      - columns: [owner]
+
+  wallet_balances_transfer_debit:
+    description: Refresh source wallet balance after transfer commit
+    source_events:
+      - TRANSFER_COMMIT
+    target:
+      table: wallet_balances
+      primary_key: [wallet_id]
+    fields:
+      wallet_id: TEXT
+      owner: TEXT
+      currency: TEXT
+      status: TEXT
+      balance: BIGINT
+      updated_at: BIGINT
+    derive:
+      wallet_id: event.payload.from_wallet_id
+      owner: lookup(wallet, event.payload.from_wallet_id).owner
+      currency: lookup(wallet, event.payload.from_wallet_id).currency
+      status: lookup(wallet, event.payload.from_wallet_id).status
+      balance: lookup(wallet, event.payload.from_wallet_id).visible.balance
+      updated_at: event.ts
+    mutations:
+      TRANSFER_COMMIT: { op: upsert }
+
+  wallet_balances_transfer_credit:
+    description: Refresh destination wallet balance after transfer commit
+    source_events:
+      - TRANSFER_COMMIT
+    target:
+      table: wallet_balances
+      primary_key: [wallet_id]
+    fields:
+      wallet_id: TEXT
+      owner: TEXT
+      currency: TEXT
+      status: TEXT
+      balance: BIGINT
+      updated_at: BIGINT
+    derive:
+      wallet_id: event.payload.to_wallet_id
+      owner: lookup(wallet, event.payload.to_wallet_id).owner
+      currency: lookup(wallet, event.payload.to_wallet_id).currency
+      status: lookup(wallet, event.payload.to_wallet_id).status
+      balance: lookup(wallet, event.payload.to_wallet_id).visible.balance
+      updated_at: event.ts
+    mutations:
+      TRANSFER_COMMIT: { op: upsert }
+
+  ledger_movements:
+    description: Append-only fund and withdraw movements
+    source_events:
+      - WALLET_FUNDED
+      - WALLET_WITHDRAWN
+    target:
+      table: ledger_movements
+      primary_key: [movement_id]
+    fields:
+      movement_id: TEXT
+      wallet_id: TEXT
+      counterparty_wallet_id: TEXT
+      movement_type: TEXT
+      amount: BIGINT
+      balance_after: BIGINT
+      reference: TEXT
+      transfer_id: TEXT
+      recorded_at: BIGINT
+    derive:
+      movement_id: event.payload.movement_id
+      wallet_id: event.payload.wallet_id
+      counterparty_wallet_id: null
+      movement_type: event.type
+      amount: event.payload.amount
+      balance_after: event.payload.balance_after
+      reference: event.payload.reference
+      transfer_id: null
+      recorded_at: event.ts
+    mutations:
+      WALLET_FUNDED: { op: upsert }
+      WALLET_WITHDRAWN: { op: upsert }
+    indexes:
+      - columns: [wallet_id]
+      - columns: [recorded_at]
+        direction: desc
+
+  ledger_transfer_out:
+    description: Debit leg of a committed transfer
+    source_events:
+      - TRANSFER_COMMIT
+    target:
+      table: ledger_movements
+      primary_key: [movement_id]
+    fields:
+      movement_id: TEXT
+      wallet_id: TEXT
+      counterparty_wallet_id: TEXT
+      movement_type: TEXT
+      amount: BIGINT
+      balance_after: BIGINT
+      reference: TEXT
+      transfer_id: TEXT
+      recorded_at: BIGINT
+    derive:
+      movement_id: concat(event.payload.transfer_id, ":out")
+      wallet_id: event.payload.from_wallet_id
+      counterparty_wallet_id: event.payload.to_wallet_id
+      movement_type: event.type
+      amount: event.payload.amount
+      balance_after: lookup(wallet, event.payload.from_wallet_id).visible.balance
+      reference: event.payload.envelope_id
+      transfer_id: event.payload.transfer_id
+      recorded_at: event.ts
+    mutations:
+      TRANSFER_COMMIT: { op: upsert }
+
+  ledger_transfer_in:
+    description: Credit leg of a committed transfer
+    source_events:
+      - TRANSFER_COMMIT
+    target:
+      table: ledger_movements
+      primary_key: [movement_id]
+    fields:
+      movement_id: TEXT
+      wallet_id: TEXT
+      counterparty_wallet_id: TEXT
+      movement_type: TEXT
+      amount: BIGINT
+      balance_after: BIGINT
+      reference: TEXT
+      transfer_id: TEXT
+      recorded_at: BIGINT
+    derive:
+      movement_id: concat(event.payload.transfer_id, ":in")
+      wallet_id: event.payload.to_wallet_id
+      counterparty_wallet_id: event.payload.from_wallet_id
+      movement_type: event.type
+      amount: event.payload.amount
+      balance_after: lookup(wallet, event.payload.to_wallet_id).visible.balance
+      reference: event.payload.envelope_id
+      transfer_id: event.payload.transfer_id
+      recorded_at: event.ts
+    mutations:
+      TRANSFER_COMMIT: { op: upsert }
+
+  transfer_index:
+    description: Transfer envelope outcomes
+    source_events:
+      - TRANSFER_COMMIT
+      - TRANSFER_ABORT
+    target:
+      table: transfer_index
+      primary_key: [transfer_id]
+    fields:
+      transfer_id: TEXT
+      envelope_id: TEXT
+      from_wallet_id: TEXT
+      to_wallet_id: TEXT
+      amount: BIGINT
+      status: TEXT
+      reason: TEXT
+      updated_at: BIGINT
+    derive:
+      transfer_id: event.payload.transfer_id
+      envelope_id: event.payload.envelope_id
+      from_wallet_id: event.payload.from_wallet_id
+      to_wallet_id: event.payload.to_wallet_id
+      amount: event.payload.amount
+      status: event.type
+      reason: event.payload.reason
+      updated_at: event.ts
+    mutations:
+      TRANSFER_COMMIT: { op: upsert }
+      TRANSFER_ABORT: { op: upsert }
+    indexes:
+      - columns: [from_wallet_id]
+      - columns: [to_wallet_id]

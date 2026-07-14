@@ -1,0 +1,57 @@
+projections:
+  ticket_queue:
+    description: Open tickets ranked by AI triage priority
+    source_events:
+      - TICKET_AI_TRIAGED
+      - TICKET_CLOSED
+    target:
+      table: ticket_queue
+      primary_key: [ticket_id]
+    fields:
+      ticket_id: TEXT
+      customer_id: TEXT
+      priority: TEXT
+      category: TEXT
+      summary: TEXT
+      confidence: DOUBLE
+      status: TEXT
+      triaged_at: BIGINT
+    derive:
+      ticket_id: event.payload.ticket_id
+      customer_id: event.payload.customer_id
+      priority: event.payload.priority
+      category: event.payload.category
+      summary: event.payload.summary
+      confidence: event.payload.confidence
+      status: lookup(ticket, event.payload.ticket_id).status
+      triaged_at: event.ts
+    mutations:
+      TICKET_AI_TRIAGED:
+        op: upsert
+      TICKET_CLOSED:
+        op: bulk_update
+        set:
+          status: event.payload.status
+        where:
+          ticket_id: event.payload.ticket_id
+
+  triage_by_category:
+    description: Aggregate triaged ticket counts by category
+    source_events:
+      - TICKET_AI_TRIAGED
+    target:
+      table: triage_by_category
+      primary_key: [category]
+    fields:
+      category: TEXT
+      ticket_count: BIGINT
+      urgent_count: BIGINT
+    derive:
+      category: event.payload.category
+    aggregates:
+      TICKET_AI_TRIAGED:
+        ticket_count: { op: add, by: 1 }
+        urgent_count:
+          op: add
+          by: 1
+          when: event.payload.priority == "urgent"

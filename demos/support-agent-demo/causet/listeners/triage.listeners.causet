@@ -1,0 +1,16 @@
+listeners:
+  - on: TICKET_AI_TRIAGED
+    priority: 0
+    mutate:
+      - op: set
+        field: priority
+        value: event.payload.priority
+      - op: set
+        field: category
+        value: event.payload.category
+      - op: set
+        field: ai_summary
+        value: event.payload.summary
+      - op: set
+        field: ai_confidence
+        value: event.payload.confidence

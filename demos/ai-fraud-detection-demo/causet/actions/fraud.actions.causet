@@ -1,0 +1,153 @@
+# CARD_TRANSACTION_AUTHORIZED — main demo intent
+#
+# Flow:
+#   1. core rules     — persist transaction fields synchronously (ledger commit)
+#   2. side_effects   — op: decision (LLM) then conditional emits + dashboard update
+#
+# Use dot notation for decision output paths (entity.decisions.fraud_screening.output.*).
+# Slash paths like entity.decisions/fraud_screening/... are parsed as division in expressions.
+
+actions:
+  CARD_TRANSACTION_AUTHORIZED:
+    state: transaction
+    entity_id_expr: intent.transaction_id
+    description: Authorize a card transaction, run AI fraud screening, and emit branch events
+    input:
+      transaction_id: { type: string, required: true }
+      card_id: { type: string, required: true }
+      customer_id: { type: string, required: true }
+      amount: { type: number, required: true }
+      currency: { type: string, required: true }
+      merchant: { type: string, required: true }
+      merchant_category: { type: string, required: true }
+      merchant_risk: { type: string, required: true }
+      location: { type: string, required: true }
+      previous_location: { type: string, required: true }
+      velocity: { type: object, required: true }
+      cardholder: { type: object, required: true }
+      velocity_attempts: { type: integer, required: false }
+      velocity_window_minutes: { type: integer, required: false }
+      cardholder_home_region: { type: string, required: false }
+      typical_transaction_amount: { type: number, required: false }
+
+    # Synchronous state patch — runs before side_effects, always commits with intent
+    core:
+      rules:
+        - name: persist_transaction
+          then:
+            - op: set
+              path: /transaction_id
+              value: intent.transaction_id
+            - op: set
+              path: /card_id
+              value: intent.card_id
+            - op: set
+              path: /customer_id
+              value: intent.customer_id
+            - op: set
+              path: /amount
+              value: intent.amount
+            - op: set
+              path: /currency
+              value: intent.currency
+            - op: set
+              path: /merchant
+              value: intent.merchant
+            - op: set
+              path: /merchant_category
+              value: intent.merchant_category
+            - op: set
+              path: /location
+              value: intent.location
+            - op: set
+              path: /status
+              value: screening
+
+    # Async-capable block — AI decision + emits (longer rule timeout at runtime)
+    side_effects:
+      rules:
+        - name: ai_fraud_screening
+          then:
+            # Calls decisions/fraud_screening → emits FRAUD_DECISION_MADE
+            - op: decision
+              ref: fraud_screening
+              input:
+                transaction_id: intent.transaction_id
+                card_id: intent.card_id
+                customer_id: intent.customer_id
+                amount: intent.amount
+                currency: intent.currency
+                merchant: intent.merchant
+                merchant_category: intent.merchant_category
+                merchant_risk: intent.merchant_risk
+                location: intent.location
+                previous_location: intent.previous_location
+                velocity_attempts: intent.velocity_attempts
+                velocity_window_minutes: intent.velocity_window_minutes
+                cardholder_home_region: intent.cardholder_home_region
+                typical_transaction_amount: intent.typical_transaction_amount
+                dashboard_id: "global"
+
+            # Branch on validated LLM decision (must use dot path — see file header)
+            - op: if
+              expr: 'entity.decisions.fraud_screening.output.decision == "BLOCK"'
+              then:
+                - op: emit
+                  event_type: TRANSACTION_BLOCKED
+                  payload:
+                    transaction_id: intent.transaction_id
+                    card_id: intent.card_id
+                    customer_id: intent.customer_id
+                    dashboard_id: "global"
+                - op: emit
+                  event_type: CARD_TEMPORARILY_FROZEN
+                  payload:
+                    transaction_id: intent.transaction_id
+                    card_id: intent.card_id
+                    customer_id: intent.customer_id
+                    dashboard_id: "global"
+                - op: emit
+                  event_type: VERIFICATION_REQUESTED
+                  payload:
+                    transaction_id: intent.transaction_id
+                    card_id: intent.card_id
+                    customer_id: intent.customer_id
+                    dashboard_id: "global"
+
+            - op: if
+              expr: 'entity.decisions.fraud_screening.output.decision == "REVIEW"'
+              then:
+                - op: emit
+                  event_type: TRANSACTION_HELD_FOR_REVIEW
+                  payload:
+                    transaction_id: intent.transaction_id
+                    card_id: intent.card_id
+                    customer_id: intent.customer_id
+                    dashboard_id: "global"
+                - op: emit
+                  event_type: FRAUD_REVIEW_CREATED
+                  payload:
+                    transaction_id: intent.transaction_id
+                    card_id: intent.card_id
+                    customer_id: intent.customer_id
+                    dashboard_id: "global"
+
+            - op: if
+              expr: 'entity.decisions.fraud_screening.output.decision == "ALLOW"'
+              then:
+                - op: emit
+                  event_type: TRANSACTION_APPROVED
+                  payload:
+                    transaction_id: intent.transaction_id
+                    card_id: intent.card_id
+                    customer_id: intent.customer_id
+                    dashboard_id: "global"
+
+            # Terminal emit — drives saga complete + fraud_dashboard latest_* fields
+            - op: emit
+              event_type: FRAUD_DASHBOARD_UPDATED
+              payload:
+                transaction_id: intent.transaction_id
+                decision: entity.decisions.fraud_screening.output.decision
+                fraud_score: entity.decisions.fraud_screening.output.fraud_score
+                dashboard_id: "global"

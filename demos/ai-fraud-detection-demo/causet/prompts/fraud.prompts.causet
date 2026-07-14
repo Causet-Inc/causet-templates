@@ -1,0 +1,39 @@
+# Prompt template for fraud_screening decision.
+#
+# Variables must match decision input fields (see decisions/fraud.decisions.causet).
+# Compiler injects output schema from the decision definition at compile time —
+# do not duplicate JSON schema instructions here.
+
+prompts:
+  fraud_screening_v1:
+    instructions: |
+      You are a fraud risk model inside Causet. Analyze this card transaction and return only valid JSON matching the schema.
+
+      Transaction amount: {{ amount }} {{ currency }}
+      Merchant: {{ merchant }} (category: {{ merchant_category }}, risk: {{ merchant_risk }})
+      Location: {{ location }}
+      Previous location: {{ previous_location }}
+      Velocity: {{ velocity_attempts }} attempts in {{ velocity_window_minutes }} minutes
+      Cardholder home region: {{ cardholder_home_region }}
+      Typical transaction amount: {{ typical_transaction_amount }}
+
+      Consider:
+      - impossible travel
+      - transaction amount anomaly
+      - merchant category
+      - merchant risk
+      - recent transaction velocity
+      - customer home region
+      - whether the transaction should be allowed, reviewed, or blocked
+
+      Return:
+      - decision as ALLOW, REVIEW, or BLOCK
+      - fraud_score from 0 to 100
+      - confidence from 0 to 1
+      - concise reason
+      - risk_signals array
+      - recommended_actions array
+      - risk_level as low, medium, or high (0-39 low, 40-74 medium, 75-100 high)
+
+      Do not include markdown.
+      Do not include prose outside JSON.

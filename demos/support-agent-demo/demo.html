@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support Copilot — Causet AI Demo</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181b24;
+      --surface-2: #1f2430;
+      --border: #2a3142;
+      --text: #e8eaef;
+      --muted: #8b93a7;
+      --accent: #6c8cff;
+      --accent-dim: rgba(108, 140, 255, 0.15);
+      --green: #3dd68c;
+      --green-dim: rgba(61, 214, 140, 0.12);
+      --amber: #f5a524;
+      --amber-dim: rgba(245, 165, 36, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --purple: #a78bfa;
+      --radius: 10px;
+      --font: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SF Mono", "Fira Code", "Consolas", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: linear-gradient(180deg, #141824 0%, var(--bg) 100%);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      display: grid; place-items: center; font-weight: 700; font-size: 14px;
+    }
+    .brand h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+    .brand p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .conn-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      margin-top: 6px;
+    }
+    .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+    .conn-badge.live { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+    .conn-badge.live .conn-dot { background: var(--green); }
+    .conn-badge.mock { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+    .conn-badge.mock .conn-dot { background: var(--amber); }
+    .conn-badge.error { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+    .conn-badge.error .conn-dot { background: var(--red); }
+
+    .header-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+    .header-stat { text-align: right; }
+    .header-stat .val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .header-stat .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      min-height: calc(100vh - 69px);
+    }
+
+    .panel-hidden { display: none !important; }
+
+    .panel {
+      padding: 20px;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card h3 { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      margin-top: 10px;
+    }
+    label:first-of-type { margin-top: 0; }
+
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 13px;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+    button {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+    .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover:not(:disabled) { border-color: var(--muted); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px dashed var(--border); }
+    .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+
+    .memory-list { list-style: none; }
+    .memory-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .memory-item:last-child { border-bottom: none; }
+    .memory-item .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .tag-note { background: var(--accent-dim); color: var(--accent); }
+    .tag-order { background: var(--green-dim); color: var(--green); }
+    .memory-item .meta { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+    .empty {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 16px 0;
+      text-align: center;
+    }
+
+    .flow-steps {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .flow-step {
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .flow-step.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .flow-step.done { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+
+    .ticket-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .ticket-card.closed { opacity: 0.65; }
+    .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .ticket-id { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .ticket-subject { font-size: 15px; font-weight: 600; margin: 4px 0 8px; }
+    .ticket-body { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-urgent { background: var(--red-dim); color: var(--red); }
+    .badge-high { background: var(--amber-dim); color: var(--amber); }
+    .badge-normal { background: var(--accent-dim); color: var(--accent); }
+    .badge-low { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+    .badge-billing { background: rgba(167, 139, 250, 0.15); color: var(--purple); }
+    .badge-shipping { background: var(--green-dim); color: var(--green); }
+    .badge-product { background: var(--accent-dim); color: var(--accent); }
+    .badge-account { background: var(--amber-dim); color: var(--amber); }
+    .badge-general { background: var(--surface-2); color: var(--muted); }
+    .badge-open { background: var(--green-dim); color: var(--green); }
+    .badge-closed { background: var(--surface-2); color: var(--muted); }
+
+    .ai-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--purple);
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+    .ai-box .label { font-size: 10px; color: var(--purple); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .confidence { font-size: 11px; color: var(--muted); margin-top: 8px; }
+
+    .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .queue-header h2 { font-size: 16px; font-weight: 600; }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .dash-cell {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 11px;
+    }
+    .dash-cell .cat { color: var(--muted); text-transform: capitalize; margin-bottom: 4px; }
+    .dash-cell .cnt { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .log {
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.55;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: var(--muted); }
+    .log-type { font-weight: 600; }
+    .log-type.intent { color: var(--accent); }
+    .log-type.event { color: var(--green); }
+    .log-type.decision { color: var(--purple); }
+    .log-type.cu { color: var(--amber); }
+    .log-type.query { color: #67e8f9; }
+    .log-type.api { color: var(--muted); }
+    .log-json {
+      margin-top: 6px;
+      padding: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      color: #a5b4fc;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .cu-breakdown { font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .cu-breakdown div { display: flex; justify-content: space-between; padding: 3px 0; }
+    .cu-breakdown .amt { color: var(--amber); font-variant-numeric: tabular-nums; }
+
+    .arch {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .arch code {
+      font-family: var(--mono);
+      font-size: 10px;
+      background: var(--bg);
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #c4b5fd;
+    }
+
+    .demo-banner {
+      background: var(--accent-dim);
+      border: 1px solid rgba(108, 140, 255, 0.3);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #b8c4ff;
+      margin-bottom: 16px;
+    }
+    .demo-banner.warn {
+      background: var(--amber-dim);
+      border-color: rgba(245, 165, 36, 0.35);
+      color: #fcd89a;
+    }
+
+    .ticket-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+
+    .ticket-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .ticket-table th {
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+      white-space: nowrap;
+    }
+
+    .ticket-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .ticket-table tr:last-child td { border-bottom: none; }
+    .ticket-table tr:hover td { background: rgba(108, 140, 255, 0.04); }
+    .ticket-table tr.row-closed td { opacity: 0.65; }
+
+    .ticket-table .col-id {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .ticket-table .col-subject {
+      font-weight: 600;
+      max-width: 180px;
+    }
+
+    .ticket-table .col-summary {
+      color: var(--muted);
+      max-width: 220px;
+      line-height: 1.45;
+    }
+
+    .ticket-table .col-conf {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .ticket-table .col-actions { white-space: nowrap; }
+
+    .ticket-table .badge { margin-right: 4px; margin-bottom: 2px; display: inline-block; }
+
+    .table-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .table-section-header h2 { font-size: 16px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">C</div>
+      <div>
+        <h1>Support Copilot</h1>
+        <p>Causet AI demo · intents · queries · projections</p>
+        <div class="conn-badge" id="conn-badge">
+          <span class="conn-dot"></span>
+          <span id="conn-label">Connecting…</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat">
+        <div class="val" id="stat-cu">0.000</div>
+        <div class="lbl">CU used</div>
+      </div>
+      <div class="header-stat">
+        <div class="val" id="stat-tickets">0</div>
+        <div class="lbl">Triaged</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="flow-steps" id="flow-steps">
+        <span class="flow-step" data-step="memory">1 Memory</span>
+        <span class="flow-step" data-step="ticket">2 CREATE_TICKET</span>
+        <span class="flow-step" data-step="decision">3 decision triage_ticket</span>
+        <span class="flow-step" data-step="emit">4 TICKET_AI_TRIAGED</span>
+        <span class="flow-step" data-step="query">5 projections / queries</span>
+      </div>
+
+      <div class="demo-banner" id="poll-banner" style="display:none"></div>
+
+      <div class="card">
+        <h3>New ticket → AI triage</h3>
+        <label for="customer-id">customer_id</label>
+        <input id="customer-id" value="cust_1" autocomplete="off" />
+        <label for="ticket-id">ticket_id</label>
+        <input id="ticket-id" value="tkt_100" />
+        <label for="ticket-subject">subject</label>
+        <input id="ticket-subject" value="Billing question on ord_99" />
+        <label for="ticket-body">body</label>
+        <textarea id="ticket-body">I was charged twice for my Pro plan renewal. Order ord_99 shows one charge but my card has two.</textarea>
+        <div class="btn-row">
+          <button class="btn-primary" id="btn-create">CREATE_TICKET + triage</button>
+          <button class="btn-ghost" id="btn-demo">Run full demo</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Triage dashboard · query <code>triage_dashboard</code></h3>
+        <div class="dash-grid" id="dash-grid">
+          <div class="empty" style="grid-column:1/-1;padding:8px 0">Run a ticket or refresh queries</div>
+        </div>
+      </div>
+
+      <div class="table-section-header">
+        <h2>Support tickets · <code>ticket_queue</code></h2>
+        <span class="badge badge-open" id="queue-count">0 open</span>
+      </div>
+      <div class="ticket-table-wrap">
+        <table class="ticket-table">
+          <thead>
+            <tr>
+              <th>Ticket</th>
+              <th>Customer</th>
+              <th>Subject</th>
+              <th>Priority</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Conf.</th>
+              <th>AI summary</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ticket-table-body">
+            <tr><td colspan="9" class="empty">No tickets yet — create one to run <code>op: decision</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="panel panel-hidden" aria-hidden="true">
+      <div class="panel-title">Runtime trace</div>
+
+      <div class="card">
+        <h3>Intent, query & event log</h3>
+        <div class="log" id="event-log">
+          <div class="log-entry">
+            <span class="log-time">—</span>
+            <span class="log-type api">Ready</span>
+            <div style="margin-top:4px;color:var(--muted)">Live mode polls queries every second. Defaults: test-platform / {{packageName}} / {{causetFork}} @ localhost:8085. Override with ?platform=&amp;application=&amp;fork=&amp;mode=live</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-ghost" id="btn-clear-log">Clear log</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>CU breakdown</h3>
+        <div class="cu-breakdown" id="cu-breakdown">
+          <div><span>Memory embeddings</span><span class="amt">0.000</span></div>
+          <div><span>Memory retrievals</span><span class="amt">0.000</span></div>
+          <div><span>AI decision calls</span><span class="amt">0.000</span></div>
+          <div><span>AI tokens (est.)</span><span class="amt">0.000</span></div>
+        </div>
+      </div>
+
+      <div class="card arch">
+        <strong>Live path</strong><br />
+        <code>@causet/sdk</code> → <code>POST …/runtime/…/intents/submit</code><br />
+        <code>@causet/sdk</code> → <code>POST …/queries/{slug}/run</code>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module">
+    // Relative import works when served from examples/ (npm run demo:support).
+    // file:// will fail in Chrome — show a clear banner instead of a stuck "Mock mode" badge.
+    let createDemoClient;
+    try {
+      ({ createDemoClient } = await import('../shared/causet-demo-client.mjs'));
+    } catch (err) {
+      const badge = document.getElementById('conn-badge');
+      const label = document.getElementById('conn-label');
+      if (badge) badge.classList.add('error');
+      if (label) label.textContent = 'Serve over HTTP';
+      const banner = document.getElementById('poll-banner');
+      if (banner) {
+        banner.style.display = 'block';
+        banner.className = 'demo-banner warn';
+        banner.innerHTML =
+          'Open via HTTP, not <code>file://</code>. From repo:<br>' +
+          '<code>cd examples && npm run demo:support</code><br>' +
+          'then <code>http://localhost:8787/{{packageName}}/demo.html</code>';
+      }
+      console.error('Failed to load causet-demo-client.mjs — use npm run demo:support', err);
+      throw err;
+    }
+
+    const CONFIG_KEY = 'causet_support_copilot_demo_v3';
+    const CU = {
+      memoryEmbedding: 0.1,
+      memoryRetrieval: 0.05,
+      aiDecisionCall: 0.5,
+      aiTokenPer1k: 0.01,
+    };
+
+    const state = {
+      customerId: 'cust_1',
+      memories: [],
+      tickets: [],
+      dashboard: [],
+      cu: { embedding: 0, retrieval: 0, decision: 0, tokens: 0 },
+      ticketCounter: 100,
+      busy: false,
+      /** Ticket IDs closed locally until projection query confirms status=closed */
+      pendingClosed: new Set(),
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    /** Cloud-only; local SaaS (SECURITY_LOCAL_OPEN) needs no key. */
+    const DEFAULT_API_KEY = '';
+    const LOCAL_DEFAULTS = {
+      apiBase: 'http://localhost:8085',
+      platform: 'test-platform',
+      application: '{{packageName}}',
+      forkId: '{{causetFork}}',
+    };
+
+    /** Product DSL state name — runtime canonicalizes to {state}_stream */
+    const INTENT_STREAMS = {
+      CREATE_TICKET: 'ticket',
+      CLOSE_TICKET: 'ticket',
+      RECORD_CUSTOMER_NOTE: 'customer',
+      SIMULATE_ORDER: 'customer',
+    };
+
+    function resolveStreamId(intentType) {
+      return INTENT_STREAMS[intentType] || null;
+    }
+
+    function loadConfig() {
+      const params = new URLSearchParams(location.search);
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'); } catch (_) {}
+
+      const onCloud =
+        location.port === '3000' ||
+        location.hostname.endsWith('.causet.io') ||
+        location.hostname.endsWith('.causet.cloud');
+
+      const apiBase = params.get('apiBase') || saved.apiBase || LOCAL_DEFAULTS.apiBase;
+      const isLocalApi = /localhost|127\.0\.0\.1/.test(apiBase);
+
+      const platform = params.get('platform') || params.get('platformSlug') || saved.platform || LOCAL_DEFAULTS.platform;
+      const application = params.get('application') || params.get('applicationSlug') || saved.application || LOCAL_DEFAULTS.application;
+      const forkId = params.get('fork') || params.get('forkId') || saved.forkId || LOCAL_DEFAULTS.forkId;
+      const modeParam = params.get('mode');
+      // Local open mode: no API key. Cloud: keep default key unless overridden.
+      const apiKey = params.get('apiKey') || params.get('key') || saved.apiKey || (isLocalApi ? '' : DEFAULT_API_KEY);
+      const hasDirectAuth = !!(apiKey || params.get('token') || saved.bearerToken);
+      // Local SaaS → live unless explicitly ?mode=mock. Don't let stale localStorage force mock.
+      let mode;
+      if (modeParam === 'mock' || modeParam === 'live') {
+        mode = modeParam;
+      } else if (isLocalApi) {
+        mode = 'live';
+      } else if (saved.mode === 'mock' || saved.mode === 'live') {
+        mode = saved.mode;
+      } else {
+        mode = hasDirectAuth || onCloud ? 'live' : 'mock';
+      }
+
+      return {
+        mode,
+        useProxy: onCloud && !params.get('apiBase') && !saved.apiBase && !hasDirectAuth,
+        apiBase,
+        platform,
+        application,
+        forkId,
+        apiKey,
+        bearerToken: params.get('token') || saved.bearerToken || '',
+      };
+    }
+
+    let config = loadConfig();
+    let api = createDemoClient(config).api;
+    let queryPollTimer = null;
+    let queryPollInFlight = false;
+
+    function saveConfigFromForm() {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      api = createDemoClient(config).api;
+      updateConnBadge();
+    }
+
+    function startQueryPolling() {
+      stopQueryPolling();
+      if (!isLive() || !config.platform || !config.application) return;
+
+      queryPollTimer = setInterval(() => {
+        if (!state.busy && !queryPollInFlight) refreshQueries({ quiet: true });
+      }, 1000);
+    }
+
+    function stopQueryPolling() {
+      if (queryPollTimer) {
+        clearInterval(queryPollTimer);
+        queryPollTimer = null;
+      }
+    }
+
+    function isLive() {
+      return config.mode === 'live';
+    }
+
+    function updateConnBadge(status, message) {
+      const badge = $('conn-badge');
+      const label = $('conn-label');
+      badge.classList.remove('live', 'mock', 'error');
+      if (!isLive()) {
+        badge.classList.add('mock');
+        label.textContent = 'Mock mode';
+        return;
+      }
+      if (status === 'ok') {
+        badge.classList.add('live');
+        label.textContent = message || `Live · ${config.platform}/${config.application}`;
+      } else if (status === 'error') {
+        badge.classList.add('error');
+        label.textContent = message || 'Connection failed';
+      } else {
+        badge.classList.add('live');
+        label.textContent = config.useProxy ? 'Live · cloud proxy' : `Live · ${config.apiBase}`;
+      }
+    }
+
+    function apiUrl(path) {
+      return api.platformPath(path);
+    }
+
+    async function apiFetch(url, options = {}) {
+      return api.request(url, options);
+    }
+
+    async function executeIntent(intentType, entityId, payload) {
+      const streamId = resolveStreamId(intentType);
+      if (!streamId) {
+        throw new Error(`No streamId mapping for intent ${intentType}`);
+      }
+      log('intent', intentType, { streamId, entityId, payload });
+      await api.init();
+      const result = await api.emitIntent(streamId, entityId, intentType, payload);
+      log('api', result.accepted ? `${intentType} accepted` : `${intentType} rejected`, result);
+      if (result.computeUnits != null) {
+        state.cu.decision += Number(result.computeUnits) || 0;
+        log('cu', `+${Number(result.computeUnits).toFixed(3)} CU (runtime)`, { executionId: result.executionId });
+        updateCuUI();
+      }
+      return result;
+    }
+
+    async function runQuery(querySlug, input = {}, quiet = false) {
+      if (!quiet) log('query', `POST ${querySlug}`, { input, include_total: true });
+      await api.init();
+      const result = await api.runQuery(querySlug, input, { includeTotal: true });
+      if (!quiet && result.meta && result.meta.cu_used != null) {
+        log('cu', `+${Number(result.meta.cu_used).toFixed(3)} CU query`, { query: querySlug, rows: result.meta.rows_returned });
+      }
+      if (!quiet) log('query', `${querySlug} → ${(result.items || []).length} rows`, result);
+      return result;
+    }
+
+    function rowVal(row, ...keys) {
+      for (const k of keys) {
+        if (row[k] != null && row[k] !== '') return row[k];
+        const short = k.includes('.') ? k.split('.').pop() : k;
+        if (row[short] != null && row[short] !== '') return row[short];
+      }
+      return null;
+    }
+
+    /** Normalize confidence to 0–100 (runtime returns 0.0–1.0). */
+    function confidencePct(raw) {
+      const n = Number(raw) || 0;
+      return n > 0 && n <= 1 ? n * 100 : n;
+    }
+
+    function ticketsFromQueryItems(items, customerId) {
+      return (items || []).map((row) => applyLocalClosed({
+        id: rowVal(row, 'ticket_queue.ticket_id', 'ticket_id') || 'unknown',
+        customerId: rowVal(row, 'ticket_queue.customer_id', 'customer_id') || customerId,
+        subject: rowVal(row, 'summary', 'ticket_queue.summary') || '(from projection)',
+        body: '',
+        status: rowVal(row, 'ticket_queue.status', 'status') || 'open',
+        triaged: true,
+        priority: rowVal(row, 'ticket_queue.priority', 'priority') || 'normal',
+        category: rowVal(row, 'ticket_queue.category', 'category') || 'general',
+        aiSummary: rowVal(row, 'ticket_queue.summary', 'summary') || '',
+        aiConfidence: confidencePct(rowVal(row, 'ticket_queue.confidence', 'confidence')),
+        tokenEstimate: 0,
+        fromQuery: true,
+      }));
+    }
+
+    function applyLocalClosed(ticket) {
+      if (!ticket) return ticket;
+      if (state.pendingClosed.has(ticket.id)) {
+        if (ticket.status === 'closed') state.pendingClosed.delete(ticket.id);
+        else return { ...ticket, status: 'closed' };
+      }
+      return ticket;
+    }
+
+    function mergeTicket(existing, incoming) {
+      if (!incoming) return existing;
+      if (!existing) return applyLocalClosed(incoming);
+      const status = existing.status === 'closed' || incoming.status === 'closed'
+        ? 'closed'
+        : (incoming.status || existing.status || 'open');
+      return applyLocalClosed({ ...existing, ...incoming, status });
+    }
+
+    async function refreshQueries(options = {}) {
+      const quiet = options.quiet === true;
+      if (!isLive()) return;
+      if (queryPollInFlight) return;
+      queryPollInFlight = true;
+      const customerId = $('customer-id').value.trim();
+      state.customerId = customerId;
+      try {
+        const [urgent, customerTickets, dashboard] = await Promise.all([
+          runQuery('urgent_tickets', { limit: 20 }, quiet),
+          customerId ? runQuery('tickets_for_customer', { customer_id: customerId }, quiet) : Promise.resolve({ items: [] }),
+          runQuery('triage_dashboard', {}, quiet),
+        ]);
+
+        const merged = new Map();
+        for (const t of [
+          ...ticketsFromQueryItems(urgent.items, customerId),
+          ...ticketsFromQueryItems(customerTickets.items, customerId),
+        ]) {
+          merged.set(t.id, mergeTicket(merged.get(t.id), t));
+        }
+        state.tickets = Array.from(merged.values());
+        state.dashboard = (dashboard.items || []).map((row) => ({
+          category: rowVal(row, 'triage_by_category.category', 'category') || 'unknown',
+          ticket_count: Number(rowVal(row, 'triage_by_category.ticket_count', 'ticket_count')) || 0,
+          urgent_count: Number(rowVal(row, 'triage_by_category.urgent_count', 'urgent_count')) || 0,
+        }));
+        renderDashboard();
+        renderQueue();
+        updateCuUI();
+        setFlowStep('query', state.tickets.length ? 'done' : 'active');
+        if (!quiet) updateConnBadge('ok');
+      } catch (e) {
+        if (!quiet) {
+          log('api', 'Query refresh failed', { error: e.message });
+        }
+        const banner = $('poll-banner');
+        banner.style.display = 'block';
+        banner.className = 'demo-banner warn';
+        banner.textContent = `Query failed: ${e.message}. Deploy {{packageName}} on fork ${config.forkId}?`;
+        updateConnBadge('error', e.message.slice(0, 40));
+      } finally {
+        queryPollInFlight = false;
+      }
+    }
+
+    async function bootstrapLive() {
+      if (!isLive() || !config.platform || !config.application) {
+        updateConnBadge();
+        return;
+      }
+      try {
+        await refreshQueries();
+        startQueryPolling();
+      } catch (_) {
+        /* refreshQueries handles banner + badge */
+      }
+    }
+
+    function fmtCu(n) { return n.toFixed(3); }
+
+    function updateCuUI() {
+      const total = state.cu.embedding + state.cu.retrieval + state.cu.decision + state.cu.tokens;
+      $('stat-cu').textContent = fmtCu(total);
+      $('stat-tickets').textContent = state.tickets.filter((t) => t.triaged).length;
+      const rows = $('cu-breakdown').children;
+      rows[0].querySelector('.amt').textContent = fmtCu(state.cu.embedding);
+      rows[1].querySelector('.amt').textContent = fmtCu(state.cu.retrieval);
+      rows[2].querySelector('.amt').textContent = fmtCu(state.cu.decision);
+      rows[3].querySelector('.amt').textContent = fmtCu(state.cu.tokens);
+    }
+
+    function now() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function log(type, title, payload) {
+      const el = document.createElement('div');
+      el.className = 'log-entry';
+      el.innerHTML =
+        `<span class="log-time">${now()}</span> ` +
+        `<span class="log-type ${type}">${escapeHtml(title)}</span>` +
+        (payload ? `<div class="log-json">${escapeHtml(JSON.stringify(payload, null, 2))}</div>` : '');
+      $('event-log').prepend(el);
+    }
+
+    function setFlowStep(step, status) {
+      const el = document.querySelector(`.flow-step[data-step="${step}"]`);
+      if (!el) return;
+      el.classList.remove('active', 'done');
+      if (status) el.classList.add(status);
+    }
+
+    function resetFlow() {
+      document.querySelectorAll('.flow-step').forEach((el) => el.classList.remove('active', 'done'));
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function priorityBadge(p) {
+      const map = { urgent: 'badge-urgent', high: 'badge-high', normal: 'badge-normal', low: 'badge-low' };
+      return `<span class="badge ${map[p] || 'badge-normal'}">${escapeHtml(p || 'normal')}</span>`;
+    }
+
+    function categoryBadge(c) {
+      const map = {
+        billing: 'badge-billing', shipping: 'badge-shipping', product: 'badge-product',
+        account: 'badge-account', general: 'badge-general',
+      };
+      return `<span class="badge ${map[c] || 'badge-general'}">${escapeHtml(c || 'general')}</span>`;
+    }
+
+    function renderDashboard() {
+      const grid = $('dash-grid');
+      if (!state.dashboard.length) {
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1;padding:8px 0">No triage data yet</div>';
+        return;
+      }
+      grid.innerHTML = state.dashboard.map((d) =>
+        `<div class="dash-cell">
+          <div class="cat">${escapeHtml(d.category)}</div>
+          <div class="cnt">${d.ticket_count}</div>
+          <div class="meta" style="font-size:10px;color:var(--muted)">${d.urgent_count} urgent</div>
+        </div>`
+      ).join('');
+    }
+
+    function mockTriage({ subject, body, customerId, memories }) {
+      const text = (subject + ' ' + body).toLowerCase();
+      let category = 'general';
+      let priority = 'normal';
+      if (/bill|charge|refund|invoice|ord_|payment|twice|duplicate/.test(text)) {
+        category = 'billing';
+        priority = /twice|duplicate|urgent|immediately/.test(text) ? 'urgent' : 'high';
+      } else if (/ship|deliver|tracking|package|lost/.test(text)) {
+        category = 'shipping';
+        priority = /lost|never arrived/.test(text) ? 'high' : 'normal';
+      } else if (/login|password|account|access/.test(text)) {
+        category = 'account';
+      } else if (/bug|broken|error|feature/.test(text)) {
+        category = 'product';
+        priority = /broken|down|outage/.test(text) ? 'high' : 'normal';
+      }
+      const orderMem = memories.find((m) => m.type === 'order');
+      const noteMem = memories.find((m) => m.type === 'note');
+      let summary = `Ticket for ${customerId}: ${subject.slice(0, 60)}`;
+      if (category === 'billing' && orderMem) {
+        summary = `Likely duplicate billing on ${orderMem.orderId} (${orderMem.itemSummary}). Recommend verify charges before refund.`;
+      }
+      if (noteMem && noteMem.text.includes('email')) summary += ' Contact via email per CRM note.';
+      const tokenEstimate = 800 + memories.length * 120 + body.length;
+      const tokenCu = Math.ceil(tokenEstimate / 1000) * CU.aiTokenPer1k;
+      const confidence = Math.min(0.97, 0.72 + memories.length * 0.08 + (category === 'billing' ? 0.1 : 0));
+      return { priority, category, summary, confidence: Math.round(confidence * 100) / 100, tokenCu, tokenEstimate };
+    }
+
+    function renderQueue() {
+      const tbody = $('ticket-table-body');
+      const open = state.tickets.filter((t) => t.status === 'open');
+      $('queue-count').textContent = `${open.length} open`;
+
+      if (state.tickets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">No tickets yet — create one to run <code>op: decision</code></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = state.tickets.slice().reverse().map((t) => {
+        const closed = t.status === 'closed';
+        const summary = t.triaged ? (t.aiSummary || t.subject) : '—';
+        const conf = t.triaged ? `${confidencePct(t.aiConfidence).toFixed(0)}%` : '—';
+        const priority = t.triaged ? priorityBadge(t.priority) : '—';
+        const category = t.triaged ? categoryBadge(t.category) : '—';
+        const statusBadge = t.triaged
+          ? `<span class="badge badge-${t.status}">${escapeHtml(t.status)}</span>`
+          : `<span class="badge badge-open">open</span>`;
+        const action = !closed
+          ? `<button class="btn-secondary btn-close" data-id="${escapeHtml(t.id)}">Close</button>`
+          : '';
+        return `<tr class="${closed ? 'row-closed' : ''}" data-id="${escapeHtml(t.id)}">
+          <td class="col-id">${escapeHtml(t.id)}</td>
+          <td class="col-id">${escapeHtml(t.customerId)}</td>
+          <td class="col-subject">${escapeHtml(t.subject)}</td>
+          <td>${priority}</td>
+          <td>${category}</td>
+          <td>${statusBadge}</td>
+          <td class="col-conf">${conf}</td>
+          <td class="col-summary" title="${escapeHtml(summary)}">${escapeHtml(summary)}</td>
+          <td class="col-actions">${action}</td>
+        </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll('.btn-close').forEach((btn) => {
+        btn.addEventListener('click', () => closeTicket(btn.dataset.id));
+      });
+    }
+
+    function pushMemory(type, text, meta, extra = {}) {
+      state.memories.push({ type, text, meta, ...extra });
+      updateCuUI();
+      setFlowStep('memory', 'done');
+    }
+
+    async function recordNote() {
+      const customerId = $('customer-id').value.trim();
+      const note = 'Prefers email contact; timezone US/Pacific';
+      if (!customerId) return alert('customer_id required');
+
+      if (isLive()) {
+        try {
+          setBusy(true);
+          await executeIntent('RECORD_CUSTOMER_NOTE', customerId, {
+            customer_id: customerId,
+            note,
+            author: 'demo_agent',
+          });
+          pushMemory('note', note, `partition: ${customerId} · async embed via Kafka`);
+          state.cu.embedding += CU.memoryEmbedding;
+          log('cu', '+0.100 CU memory embedding (est.)', { operation: 'MEMORY_EMBEDDING_CALL' });
+          updateCuUI();
+        } catch (e) {
+          log('api', 'RECORD_CUSTOMER_NOTE failed', { error: e.message });
+          alert(e.message);
+        } finally { setBusy(false); }
+        return;
+      }
+
+      log('intent', 'RECORD_CUSTOMER_NOTE (mock)', { customer_id: customerId, note });
+      setTimeout(() => {
+        log('event', 'CUSTOMER_NOTE_RECORDED', { customer_id: customerId, note });
+        pushMemory('note', note, `partition: ${customerId} · embedded via provider embeddings`);
+        state.cu.embedding += CU.memoryEmbedding;
+        log('cu', '+0.100 CU memory embedding', { operation: 'MEMORY_EMBEDDING_CALL' });
+        updateCuUI();
+      }, 400);
+    }
+
+    async function simulateOrder() {
+      const customerId = $('customer-id').value.trim();
+      const orderId = 'ord_99';
+      const total = 149.99;
+      const itemSummary = 'Pro plan annual';
+      if (!customerId) return alert('customer_id required');
+
+      if (isLive()) {
+        try {
+          setBusy(true);
+          await executeIntent('SIMULATE_ORDER', customerId, {
+            customer_id: customerId,
+            order_id: orderId,
+            total,
+            item_summary: itemSummary,
+          });
+          pushMemory('order', `Order ${orderId}: ${itemSummary} ($${total.toFixed(2)})`, `partition: ${customerId}`, { orderId, itemSummary });
+          state.cu.embedding += CU.memoryEmbedding;
+          log('cu', '+0.100 CU memory embedding (est.)', null);
+          updateCuUI();
+        } catch (e) {
+          log('api', 'SIMULATE_ORDER failed', { error: e.message });
+          alert(e.message);
+        } finally { setBusy(false); }
+        return;
+      }
+
+      log('intent', 'SIMULATE_ORDER (mock)', { customer_id: customerId, order_id: orderId, total, item_summary: itemSummary });
+      setTimeout(() => {
+        log('event', 'ORDER_PLACED', { customer_id: customerId, order_id: orderId, total, item_summary: itemSummary });
+        pushMemory('order', `Order ${orderId}: ${itemSummary} ($${total.toFixed(2)})`, `partition: ${customerId}`, { orderId, itemSummary });
+        state.cu.embedding += CU.memoryEmbedding;
+        updateCuUI();
+      }, 400);
+    }
+
+    async function createTicket(auto = false) {
+      const customerId = $('customer-id').value.trim();
+      let ticketId = $('ticket-id').value.trim();
+      const subject = $('ticket-subject').value.trim();
+      const body = $('ticket-body').value.trim();
+
+      if (!customerId || !subject || !body) {
+        if (!auto) alert('Fill in customer, subject, and body');
+        return;
+      }
+      if (!ticketId) {
+        state.ticketCounter += 1;
+        ticketId = `tkt_${state.ticketCounter}`;
+        $('ticket-id').value = ticketId;
+      }
+
+      resetFlow();
+      setFlowStep('memory', state.memories.length ? 'done' : 'active');
+      setFlowStep('ticket', 'active');
+
+      if (isLive()) {
+        try {
+          setBusy(true);
+          const result = await executeIntent('CREATE_TICKET', ticketId, {
+            ticket_id: ticketId,
+            customer_id: customerId,
+            subject,
+            body,
+          });
+          if (!result.accepted) {
+            alert(result.error || 'Intent rejected');
+            return;
+          }
+          setFlowStep('ticket', 'done');
+          setFlowStep('decision', 'done');
+          setFlowStep('emit', 'done');
+          setFlowStep('query', 'active');
+          log('decision', 'triage_ticket (runtime)', { note: 'Polling projections for triage results…' });
+          state.cu.retrieval += state.memories.length ? CU.memoryRetrieval : 0;
+          state.cu.decision += CU.aiDecisionCall;
+          await refreshQueries();
+          state.ticketCounter += 1;
+          $('ticket-id').value = `tkt_${state.ticketCounter}`;
+        } catch (e) {
+          log('api', 'CREATE_TICKET failed', { error: e.message });
+          alert(e.message);
+        } finally { setBusy(false); }
+        return;
+      }
+
+      log('intent', 'CREATE_TICKET', { intent_type: 'CREATE_TICKET', ticket_id: ticketId, customer_id: customerId, subject, body });
+      await delay(350);
+      log('event', 'TICKET_CREATED', { ticket_id: ticketId, customer_id: customerId, subject, body });
+      setFlowStep('ticket', 'done');
+      setFlowStep('decision', 'active');
+
+      const ticket = { id: ticketId, customerId, subject, body, status: 'open', triaged: false };
+      state.tickets.push(ticket);
+      renderQueue();
+      await delay(500);
+
+      if (state.memories.length > 0) {
+        state.cu.retrieval += CU.memoryRetrieval;
+        log('cu', '+0.050 CU memory retrieval', { memory: 'customer_history', refs: 1 });
+      }
+      state.cu.decision += CU.aiDecisionCall;
+      const triage = mockTriage({ subject, body, customerId, memories: state.memories });
+      state.cu.tokens += triage.tokenCu;
+
+      log('decision', 'triage_ticket (provider: reasoning)', {
+        prompt: 'triage_v1',
+        memories: ['customer_history'],
+        input: { ticket_id: ticketId, customer_id: customerId, subject, body },
+        output: { priority: triage.priority, category: triage.category, summary: triage.summary, confidence: triage.confidence },
+        total_tokens: triage.tokenEstimate,
+      });
+      log('cu', `+${fmtCu(CU.aiDecisionCall)} CU decision + ${fmtCu(triage.tokenCu)} tokens`, null);
+      await delay(400);
+      setFlowStep('decision', 'done');
+      setFlowStep('emit', 'active');
+      log('event', 'TICKET_AI_TRIAGED', {
+        ticket_id: ticketId,
+        customer_id: customerId,
+        priority: triage.priority,
+        category: triage.category,
+        summary: triage.summary,
+        confidence: triage.confidence,
+      });
+      setFlowStep('emit', 'done');
+      setFlowStep('query', 'done');
+
+      Object.assign(ticket, {
+        triaged: true,
+        priority: triage.priority,
+        category: triage.category,
+        aiSummary: triage.summary,
+        aiConfidence: confidencePct(triage.confidence),
+        tokenEstimate: triage.tokenEstimate,
+      });
+      state.dashboard = [{ category: triage.category, ticket_count: 1, urgent_count: triage.priority === 'urgent' ? 1 : 0 }];
+      renderDashboard();
+      renderQueue();
+      updateCuUI();
+    }
+
+    async function closeTicket(ticketId) {
+      const ticket = state.tickets.find((t) => t.id === ticketId);
+      if (!ticket || ticket.status === 'closed') return;
+
+      if (isLive()) {
+        try {
+          setBusy(true);
+          await executeIntent('CLOSE_TICKET', ticketId, { ticket_id: ticketId });
+          state.pendingClosed.add(ticketId);
+          ticket.status = 'closed';
+          renderQueue();
+          log('intent', 'CLOSE_TICKET', { ticket_id: ticketId });
+          log('event', 'TICKET_CLOSED → projection bulk_update', { ticket_id: ticketId, status: 'closed' });
+          await waitForProjectionClosed(ticketId);
+        } catch (e) {
+          state.pendingClosed.delete(ticketId);
+          alert(e.message);
+        } finally { setBusy(false); }
+        return;
+      }
+
+      log('intent', 'CLOSE_TICKET', { ticket_id: ticketId });
+      ticket.status = 'closed';
+      log('event', 'entity.status → closed', { ticket_id: ticketId });
+      renderQueue();
+    }
+
+    async function waitForProjectionClosed(ticketId) {
+      for (let i = 0; i < 8; i++) {
+        await delay(i === 0 ? 300 : 500);
+        await refreshQueries({ quiet: true });
+        const t = state.tickets.find((x) => x.id === ticketId);
+        if (!t || t.status === 'closed') {
+          if (t?.status === 'closed') state.pendingClosed.delete(ticketId);
+          return;
+        }
+      }
+    }
+
+    function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+    function setBusy(on) {
+      state.busy = on;
+      ['btn-create', 'btn-demo'].forEach((id) => {
+        $(id).disabled = on;
+      });
+    }
+
+    async function runFullDemo() {
+      $('event-log').innerHTML = '';
+      state.memories = [];
+      state.tickets = [];
+      state.dashboard = [];
+      state.cu = { embedding: 0, retrieval: 0, decision: 0, tokens: 0 };
+      renderDashboard();
+      renderQueue();
+      updateCuUI();
+      resetFlow();
+
+      $('customer-id').value = 'cust_1';
+      $('ticket-subject').value = 'Billing question on ord_99';
+      $('ticket-body').value = 'I was charged twice for my Pro plan renewal. Order ord_99 shows one charge but my card has two.';
+
+      await recordNote();
+      await delay(isLive() ? 1200 : 600);
+      await simulateOrder();
+      await delay(isLive() ? 1500 : 800);
+      await createTicket(true);
+    }
+
+    $('btn-create').addEventListener('click', () => createTicket(false));
+    $('btn-demo').addEventListener('click', () => runFullDemo());
+    $('btn-clear-log').addEventListener('click', () => {
+      $('event-log').innerHTML = '<div class="log-entry"><span class="log-time">—</span> Log cleared</div>';
+    });
+    $('customer-id').addEventListener('change', () => refreshQueries({ quiet: true }));
+
+    updateConnBadge();
+    updateCuUI();
+    bootstrapLive();
+    window.addEventListener('beforeunload', stopQueryPolling);
+  </script>
+</body>
+</html>

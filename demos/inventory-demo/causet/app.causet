@@ -1,0 +1,24 @@
+# Inventory — {{projectName}}
+# Template: {{templateId}} · sourced from inventory-modernization
+#
+# Legacy CRUD vs Causet retrofit: RECEIVE / RESERVE / ADJUST / TRANSFER
+#
+#   causet build compile --runtime causet --out dist
+#   npm run dev --prefix app   → http://localhost:3848
+
+dsl_version: 1
+app: "{{packageName}}"
+
+includes:
+  states:
+    - ./states/**/*.state.causet
+  events:
+    - ./events/**/*.events.causet
+  actions:
+    - ./actions/**/*.actions.causet
+  listeners:
+    - ./listeners/**/*.listeners.causet
+  projections:
+    - ./projections/**/*.projections.causet
+  queries:
+    - ./queries/**/*.queries.causet

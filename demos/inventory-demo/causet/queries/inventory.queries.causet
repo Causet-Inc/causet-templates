@@ -1,0 +1,74 @@
+queries:
+  inventory_levels:
+    description: All inventory positions
+    from: inventory_dashboard
+    fields:
+      - inventory_dashboard.position_id
+      - inventory_dashboard.sku_id
+      - inventory_dashboard.sku_name
+      - inventory_dashboard.warehouse_id
+      - inventory_dashboard.on_hand
+      - inventory_dashboard.reserved
+      - inventory_dashboard.available
+      - inventory_dashboard.reorder_point
+      - inventory_dashboard.updated_at
+    order_by:
+      sku_id: asc
+    limit: 100
+
+  sku_movement_history:
+    description: Movement timeline for one SKU at a warehouse
+    from: movement_timeline
+    input:
+      position_id: { type: string, required: true }
+    fields:
+      - movement_timeline.position_id
+      - movement_timeline.sku_id
+      - movement_timeline.warehouse_id
+      - movement_timeline.movement_type
+      - movement_timeline.quantity
+      - movement_timeline.balance_after
+      - movement_timeline.reference
+      - movement_timeline.status
+      - movement_timeline.event_ts
+    where:
+      position_id:
+        eq: input.position_id
+    order_by:
+      event_ts: asc
+    limit: 100
+
+  low_stock_alerts:
+    description: Positions at or below reorder point
+    from: inventory_dashboard
+    fields:
+      - inventory_dashboard.position_id
+      - inventory_dashboard.sku_id
+      - inventory_dashboard.sku_name
+      - inventory_dashboard.warehouse_id
+      - inventory_dashboard.on_hand
+      - inventory_dashboard.available
+      - inventory_dashboard.reorder_point
+    where:
+      available:
+        lte: input.threshold
+    input:
+      threshold: { type: integer, required: false }
+    limit: 50
+
+  all_movements:
+    description: Recent inventory movements across all positions
+    from: movement_timeline
+    fields:
+      - movement_timeline.position_id
+      - movement_timeline.sku_id
+      - movement_timeline.warehouse_id
+      - movement_timeline.movement_type
+      - movement_timeline.quantity
+      - movement_timeline.balance_after
+      - movement_timeline.reference
+      - movement_timeline.status
+      - movement_timeline.event_ts
+    order_by:
+      event_ts: desc
+    limit: 200

@@ -1,0 +1,23 @@
+# Transfer saga — tracks envelope lifecycle on the transfer entity.
+
+sagas:
+  wallet_transfer_saga:
+    state: transfer
+    state_path: _tmp/wallet_transfer_saga
+    steps:
+      - name: idle
+        set: { status: idle }
+
+      - name: preparing
+        on: TRANSFER_PREPARED
+        set: { status: preparing, last_participant: event.payload.participant }
+
+      - name: committed
+        on: TRANSFER_COMMIT
+        set: { status: committed, amount: event.payload.amount, from_wallet_id: event.payload.from_wallet_id, to_wallet_id: event.payload.to_wallet_id }
+        end: true
+
+      - name: aborted
+        on: TRANSFER_ABORT
+        set: { status: aborted, reason: event.payload.reason }
+        end: true

@@ -1,0 +1,7 @@
+{
+  "entry_id": "entry-1",
+  "actor": "alice",
+  "action": "login",
+  "resource": "auth",
+  "note": "ok"
+}

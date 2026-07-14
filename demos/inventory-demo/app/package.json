@@ -1,0 +1,14 @@
+{
+  "name": "{{packageName}}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "WarePark Inventory — legacy CRUD vs Causet retrofit demo",
+  "scripts": {
+    "dev": "node server/index.mjs",
+    "start": "node server/index.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

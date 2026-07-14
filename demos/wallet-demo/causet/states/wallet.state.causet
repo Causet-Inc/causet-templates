@@ -1,0 +1,67 @@
+# Wallet entity — visible balance is the spendable ledger balance.
+# pending_envelopes is managed by commit-envelope expansion (shadow staging).
+
+state:
+  wallet:
+    entity_key: wallet_id
+    description: "Customer wallet with visible balance and causal cursor"
+    fields:
+      - name: owner
+        type: string
+        default: ""
+      - name: status
+        type: string
+        default: "closed"
+      - name: visible/balance
+        type: int
+        default: 0
+      - name: visible/causal/last_envelope_seq
+        type: int
+        default: 0
+      - name: currency
+        type: string
+        default: "USD"
+      - name: opened_at
+        type: int
+        default: 0
+
+  # Coordinator entity for two-phase transfers (commit envelope state lives here)
+  transfer:
+    entity_key: transfer_id
+    description: "Transfer envelope coordinator"
+    fields:
+      - name: status
+        type: string
+        default: "IDLE"
+      - name: from_wallet_id
+        type: string
+        default: ""
+      - name: to_wallet_id
+        type: string
+        default: ""
+      - name: amount
+        type: int
+        default: 0
+      - name: envelope_id
+        type: string
+        default: ""
+      - name: seq
+        type: int
+        default: 0
+
+  # Per-transfer ledger document (participant_type: ledger on the envelope)
+  ledger:
+    entity_key: transfer_id
+    description: "Committed transfer ledger row"
+    fields:
+      - name: entries
+        type: array
+        default: []
+        item_type: object
+        item_fields:
+          envelope_id: { type: string, required: true }
+          seq: { type: int, required: true }
+          from_wallet_id: { type: string, required: true }
+          to_wallet_id: { type: string, required: true }
+          amount: { type: int, required: true }
+          created_at: { type: int, required: true }

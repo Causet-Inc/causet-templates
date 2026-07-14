@@ -1,0 +1,22 @@
+# One audit_entry entity per recorded action (append-only from the client's POV).
+
+state:
+  audit_entry:
+    entity_key: entry_id
+    description: "Auditable action record"
+    fields:
+      - name: actor
+        type: string
+        default: ""
+      - name: action
+        type: string
+        default: ""
+      - name: resource
+        type: string
+        default: ""
+      - name: note
+        type: string
+        default: ""
+      - name: recorded_at
+        type: int
+        default: 0

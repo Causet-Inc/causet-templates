@@ -1,0 +1,33 @@
+decisions:
+  triage_ticket:
+    provider: reasoning
+    prompt: triage_v1
+    emits: TICKET_AI_TRIAGED
+    memories:
+      - customer_history
+    input:
+      ticket_id:
+        type: string
+        required: true
+      customer_id:
+        type: string
+        required: true
+      subject:
+        type: string
+        required: true
+      body:
+        type: string
+        required: true
+    output:
+      priority:
+        type: string
+        required: true
+      category:
+        type: string
+        required: true
+      summary:
+        type: string
+        required: true
+      confidence:
+        type: number
+        required: true

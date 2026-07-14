@@ -1,0 +1,99 @@
+events:
+  # ── Single-wallet lifecycle ──
+  WALLET_OPENED:
+    state: wallet
+    entity_expr: event.wallet_id
+    payload:
+      wallet_id: string
+      owner: string
+      currency: string
+      status: string
+      balance_after: integer
+    kind: event
+
+  WALLET_FUNDED:
+    state: wallet
+    entity_expr: event.wallet_id
+    payload:
+      wallet_id: string
+      owner: string
+      currency: string
+      status: string
+      amount: integer
+      balance_after: integer
+      reference: string
+      movement_id: string
+    kind: event
+
+  WALLET_WITHDRAWN:
+    state: wallet
+    entity_expr: event.wallet_id
+    payload:
+      wallet_id: string
+      owner: string
+      currency: string
+      status: string
+      amount: integer
+      balance_after: integer
+      reference: string
+      movement_id: string
+    kind: event
+
+  # ── Commit-envelope transfer lifecycle ──
+  # Note: do not declare payload `ts` — it is a reserved envelope field (use event.ts).
+  TRANSFER_PREPARE:
+    state: wallet
+    entity_expr: event.from_wallet_id
+    description: Prepare transfer on a participant wallet
+    payload:
+      transfer_id: string
+      envelope_id: string
+      seq: integer
+      from_wallet_id: string
+      to_wallet_id: string
+      amount: integer
+    kind: event
+
+  TRANSFER_PREPARED:
+    state: transfer
+    entity_expr: event.transfer_id
+    description: Participant prepared successfully
+    payload:
+      transfer_id: string
+      envelope_id: string
+      seq: integer
+      participant: string
+    kind: event
+
+  TRANSFER_COMMIT:
+    state: transfer
+    entity_expr: event.transfer_id
+    description: Commit transfer across participants
+    payload:
+      transfer_id: string
+      envelope_id: string
+      seq: integer
+      from_wallet_id: string
+      to_wallet_id: string
+      amount: integer
+    kind: event
+
+  TRANSFER_ABORT:
+    state: transfer
+    entity_expr: event.transfer_id
+    description: Abort transfer and release staging
+    payload:
+      transfer_id: string
+      envelope_id: string
+      seq: integer
+      reason: string
+    kind: event
+
+  CLOCK_TICK:
+    state: transfer
+    entity_expr: event.transfer_id
+    kind: system
+    description: Timeout tick for in-flight transfer
+    payload:
+      transfer_id: string
+      instantTime: integer

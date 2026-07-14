@@ -1,0 +1,85 @@
+queries:
+  get_wallet:
+    description: Fetch one wallet by id
+    from: wallet_balances
+    input:
+      wallet_id: { type: string, required: true }
+    fields:
+      - wallet_balances.wallet_id
+      - wallet_balances.owner
+      - wallet_balances.currency
+      - wallet_balances.status
+      - wallet_balances.balance
+      - wallet_balances.updated_at
+    where:
+      wallet_id: { eq: input.wallet_id }
+    limit: 1
+
+  list_wallets:
+    description: All wallet balances
+    from: wallet_balances
+    fields:
+      - wallet_balances.wallet_id
+      - wallet_balances.owner
+      - wallet_balances.currency
+      - wallet_balances.status
+      - wallet_balances.balance
+      - wallet_balances.updated_at
+    order_by:
+      updated_at: desc
+    limit: 100
+
+  wallet_ledger:
+    description: Movement history for one wallet
+    from: ledger_movements
+    input:
+      wallet_id: { type: string, required: true }
+    fields:
+      - ledger_movements.movement_id
+      - ledger_movements.wallet_id
+      - ledger_movements.counterparty_wallet_id
+      - ledger_movements.movement_type
+      - ledger_movements.amount
+      - ledger_movements.balance_after
+      - ledger_movements.reference
+      - ledger_movements.transfer_id
+      - ledger_movements.recorded_at
+    where:
+      wallet_id: { eq: input.wallet_id }
+    order_by:
+      recorded_at: desc
+    limit: 100
+
+  list_recent_movements:
+    description: Global recent ledger movements
+    from: ledger_movements
+    fields:
+      - ledger_movements.movement_id
+      - ledger_movements.wallet_id
+      - ledger_movements.counterparty_wallet_id
+      - ledger_movements.movement_type
+      - ledger_movements.amount
+      - ledger_movements.balance_after
+      - ledger_movements.transfer_id
+      - ledger_movements.recorded_at
+    order_by:
+      recorded_at: desc
+    limit: 50
+
+  get_transfer:
+    description: Transfer outcome by id
+    from: transfer_index
+    input:
+      transfer_id: { type: string, required: true }
+    fields:
+      - transfer_index.transfer_id
+      - transfer_index.envelope_id
+      - transfer_index.from_wallet_id
+      - transfer_index.to_wallet_id
+      - transfer_index.amount
+      - transfer_index.status
+      - transfer_index.reason
+      - transfer_index.updated_at
+    where:
+      transfer_id: { eq: input.transfer_id }
+    limit: 1

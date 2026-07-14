@@ -1,0 +1,25 @@
+{
+  "transaction_id": "txn_9K4",
+  "card_id": "card_42",
+  "customer_id": "cust_123",
+  "amount": 1842.17,
+  "currency": "USD",
+  "merchant": "ElectroMart Tokyo",
+  "merchant_category": "electronics",
+  "merchant_risk": "medium",
+  "location": "Tokyo, JP",
+  "previous_location": "New Jersey, US",
+  "velocity": {
+    "attempts": 4,
+    "window_minutes": 7
+  },
+  "cardholder": {
+    "name": "Patrick M.",
+    "home_region": "New Jersey, US",
+    "typical_transaction_amount": 72.40
+  },
+  "velocity_attempts": 4,
+  "velocity_window_minutes": 7,
+  "cardholder_home_region": "New Jersey, US",
+  "typical_transaction_amount": 72.40
+}

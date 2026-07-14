@@ -1,0 +1,13 @@
+# AI provider binding for op: decision / fraud_screening.
+#
+# Logical name "reasoning" is referenced in decisions/fraud.decisions.causet.
+# Runtime resolves API keys via platform BYOK or CAUSET_OPENAI_API_KEY / OPENAI_API_KEY.
+# For offline demos, change executor to "mock".
+
+providers:
+  reasoning:
+    executor: openai
+    model: gpt-4o-mini
+    temperature: 0.1       # low variance — fraud labels should be stable
+    max_tokens: 1024
+    timeout: 45s           # side_effects rules allow longer than default 5s rule timeout

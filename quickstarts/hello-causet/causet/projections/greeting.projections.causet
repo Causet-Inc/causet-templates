@@ -1,0 +1,30 @@
+# Read models — async materialization by causet-projection-worker.
+# derive uses event.payload.* (and event.ts). Reads are eventually consistent.
+
+projections:
+  greetings:
+    description: Latest greeting snapshot per greeting_id
+    source_events:
+      - GREETING_CREATED
+      - GREETING_UPDATED
+    target:
+      table: greetings
+      primary_key: [greeting_id]
+    fields:
+      greeting_id: TEXT
+      message: TEXT
+      status: TEXT
+      updated_count: BIGINT
+      updated_at: BIGINT
+    derive:
+      greeting_id: event.payload.greeting_id
+      message: event.payload.message
+      status: event.payload.status
+      updated_count: event.payload.updated_count
+      updated_at: event.ts
+    mutations:
+      GREETING_CREATED: { op: upsert }
+      GREETING_UPDATED: { op: upsert }
+    indexes:
+      - columns: [updated_at]
+        direction: desc

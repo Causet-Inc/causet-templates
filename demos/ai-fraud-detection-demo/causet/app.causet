@@ -1,0 +1,32 @@
+# AI Fraud Detection — {{projectName}}
+# Template: {{templateId}}
+#
+# Card authorization → AI fraud_screening decision → branch events → projections → queries
+#
+#   causet build compile --runtime causet --out dist
+#   open demo.html
+
+dsl_version: 1
+app: "{{packageName}}"
+
+includes:
+  states:
+    - ./states/**/*.state.causet
+  events:
+    - ./events/**/*.events.causet
+  actions:
+    - ./actions/**/*.actions.causet
+  providers:
+    - ./providers/**/*.providers.causet
+  prompts:
+    - ./prompts/**/*.prompts.causet
+  decisions:
+    - ./decisions/**/*.decisions.causet
+  listeners:
+    - ./listeners/**/*.listeners.causet
+  projections:
+    - ./projections/**/*.projections.causet
+  queries:
+    - ./queries/**/*.queries.causet
+  sagas:
+    - ./sagas/**/*.sagas.causet

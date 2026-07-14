@@ -1,0 +1,50 @@
+queries:
+  urgent_tickets:
+    description: High-priority tickets for agent queue
+    from: ticket_queue
+    input:
+      limit: { type: int, required: false }
+    fields:
+      - ticket_queue.ticket_id
+      - ticket_queue.customer_id
+      - ticket_queue.priority
+      - ticket_queue.category
+      - ticket_queue.summary
+      - ticket_queue.confidence
+      - ticket_queue.status
+    where:
+      priority:
+        in: [high, urgent]
+      status:
+        eq: open
+    order_by:
+      triaged_at: desc
+    limit: 50
+
+  tickets_for_customer:
+    from: ticket_queue
+    input:
+      customer_id: { type: string, required: true }
+    fields:
+      - ticket_queue.ticket_id
+      - ticket_queue.priority
+      - ticket_queue.category
+      - ticket_queue.summary
+      - ticket_queue.confidence
+      - ticket_queue.status
+    where:
+      customer_id:
+        eq: input.customer_id
+    order_by:
+      triaged_at: desc
+    limit: 20
+
+  triage_dashboard:
+    from: triage_by_category
+    fields:
+      - triage_by_category.category
+      - triage_by_category.ticket_count
+      - triage_by_category.urgent_count
+    order_by:
+      ticket_count: desc
+    limit: 10

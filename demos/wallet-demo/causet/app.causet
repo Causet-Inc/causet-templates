@@ -1,0 +1,27 @@
+# Wallets — my-wallets
+# Template: wallets
+#
+# Ledger-based wallets: open, fund, withdraw, and transfer via commit envelopes.
+# No AI — pure Causet intents + two-phase transfer coordination.
+#
+#   causet build compile --runtime causet --out dist
+#   open demo.html
+
+dsl_version: 1
+app: "my-wallets"
+
+includes:
+  states:
+    - ./states/**/*.state.causet
+  events:
+    - ./events/**/*.events.causet
+  actions:
+    - ./actions/**/*.actions.causet
+  commit_envelopes:
+    - ./commit_envelopes/**/*.envelope.causet
+  sagas:
+    - ./sagas/**/*.sagas.causet
+  projections:
+    - ./projections/**/*.projections.causet
+  queries:
+    - ./queries/**/*.queries.causet

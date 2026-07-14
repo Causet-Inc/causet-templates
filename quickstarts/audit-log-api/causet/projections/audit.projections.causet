@@ -1,0 +1,31 @@
+# Timeline read model — indexed for actor / resource / time lookups.
+
+projections:
+  audit_timeline:
+    description: Append-style audit timeline (one row per entry_id)
+    source_events:
+      - AUDIT_RECORDED
+    target:
+      table: audit_timeline
+      primary_key: [entry_id]
+    fields:
+      entry_id: TEXT
+      actor: TEXT
+      action: TEXT
+      resource: TEXT
+      note: TEXT
+      recorded_at: BIGINT
+    derive:
+      entry_id: event.payload.entry_id
+      actor: event.payload.actor
+      action: event.payload.action
+      resource: event.payload.resource
+      note: event.payload.note
+      recorded_at: event.payload.recorded_at
+    mutations:
+      AUDIT_RECORDED: { op: upsert }
+    indexes:
+      - columns: [actor]
+      - columns: [resource]
+      - columns: [recorded_at]
+        direction: desc
