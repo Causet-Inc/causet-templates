@@ -121,8 +121,8 @@ class DemoApi {
   }
 
   /** Submit intent via SDK (runtime submit path). */
-  async emitIntent(streamId, entityId, intentType, payload, intentId) {
-    return this.client.emit(streamId, entityId, intentType, payload, intentId);
+  async submitIntent(streamId, entityId, intentType, payload, intentId) {
+    return this.client.submitIntent(streamId, entityId, intentType, payload, intentId);
   }
 
   /** Run named query via SDK. */

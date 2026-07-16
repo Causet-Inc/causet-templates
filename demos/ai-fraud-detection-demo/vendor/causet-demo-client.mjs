@@ -186,7 +186,7 @@ async function fetchState(cfg, streamId, entityId, fetchImpl = boundFetch) {
     return { state: null, cursor: 0 };
   return parseSnapshot(data);
 }
-async function emitIntent(cfg, streamId, entityId, intentType, payload, intentId, fetchImpl = boundFetch) {
+async function submitIntent(cfg, streamId, entityId, intentType, payload, intentId, fetchImpl = boundFetch) {
   const url = `${runtimeBase(cfg)}/intents/submit`;
   const body = {
     intentId: intentId?.trim() || generateIntentId(),
@@ -922,16 +922,35 @@ var CausetClient = class {
     const sub = this.subscriptions.get(subKey(streamId, entityId));
     return sub ? deepClone(sub.state) : null;
   }
-  async emit(streamId, entityId, intentType, payload, intentId) {
-    const result = await this.runWithRetry((cfg) => emitIntent(cfg, streamId, entityId, intentType, payload, intentId, this.fetchImpl));
+  /**
+   * Submit an intent to the Causet runtime. On success the runtime processes the
+   * intent and may append committed business events — this call does not emit
+   * events directly.
+   */
+  async submitIntent(streamId, entityId, intentType, payload, intentId) {
+    const result = await this.runWithRetry((cfg) => submitIntent(cfg, streamId, entityId, intentType, payload, intentId, this.fetchImpl));
     if (!result.accepted) {
       throw new CausetError(result.error || `Intent ${intentType} was not accepted`);
     }
     await this.refreshSubscriptionAfterIntent(streamId, entityId, result);
     return result;
   }
+  /**
+   * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+   * directly append a committed business event.
+   */
+  async intent(streamId, entityId, intentType, payload, intentId) {
+    return this.submitIntent(streamId, entityId, intentType, payload, intentId);
+  }
+  /**
+   * @deprecated Use {@link submitIntent}. Submits an intent to the runtime; does not
+   * directly append a committed business event.
+   */
+  async emit(streamId, entityId, intentType, payload, intentId) {
+    return this.submitIntent(streamId, entityId, intentType, payload, intentId);
+  }
   /** Submit intent and stream SSE progress events (START, COMPLETE, ERROR, …). */
-  async emitStream(streamId, entityId, intentType, payload, onEvent, intentId, signal) {
+  async intentStream(streamId, entityId, intentType, payload, onEvent, intentId, signal) {
     const token = await this.getTokenPublic();
     const body = {
       intentId: intentId?.trim() || generateIntentId(),
@@ -1194,8 +1213,8 @@ var DemoApi = class {
     return data;
   }
   /** Submit intent via SDK (runtime submit path). */
-  async emitIntent(streamId, entityId, intentType, payload, intentId) {
-    return this.client.emit(streamId, entityId, intentType, payload, intentId);
+  async submitIntent(streamId, entityId, intentType, payload, intentId) {
+    return this.client.submitIntent(streamId, entityId, intentType, payload, intentId);
   }
   /** Run named query via SDK. */
   async runQuery(querySlug, input = {}, opts = {}) {

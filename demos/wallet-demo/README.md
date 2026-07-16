@@ -19,7 +19,7 @@ causet/                       ← Product DSL (states, actions, envelope, projec
 ```
 
 ```
-UI ──intent──► domain/service ──client.emit──► @causet/sdk ──► Causet runtime
+UI ──intent──► domain/service ──client.submitIntent──► @causet/sdk ──► Causet runtime
  ▲                    │                              │
  │                    └── client.runQuery ◄── projections ◄──┘
  │
@@ -30,7 +30,7 @@ UI ──intent──► domain/service ──client.emit──► @causet/sdk �
 |-------|----------------|
 | `ui/` | Forms, tables, toasts, activity log |
 | `domain/` | Wallet flows, optimistic overlays, wait-for-projection |
-| `causet/` + `@causet/sdk` | `emit`, `runQuery`, `connectStreams` (SSE/WebSocket) |
+| `causet/` + `@causet/sdk` | `submitIntent`, `runQuery`, `connectStreams` (SSE/WebSocket) |
 | `causet/*.causet` | Source of truth for intents, envelope, projections |
 
 ## Flow

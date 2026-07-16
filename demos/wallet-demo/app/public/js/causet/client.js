@@ -1,7 +1,7 @@
 /**
  * Thin Causet facade for the wallets demo — wraps `@causet/sdk`.
  *
- * Intents:  client.emit(stream, entity, type, payload)  → runtime /intents/submit
+ * Intents:  client.submitIntent(stream, entity, type, payload)  → runtime /intents/submit
  * Queries:  client.runQuery(slug, input)
  * Live:     client.connectStreams([...], { transport: 'sse', fromCursor: -1 })
  */
@@ -41,7 +41,7 @@ export class CausetDemoClient {
   }
 
   async executeIntent(streamId, entityId, intentType, payload) {
-    return this.client.emit(streamId, entityId, intentType, payload);
+    return this.client.submitIntent(streamId, entityId, intentType, payload);
   }
 
   async runQuery(name, input = {}) {
