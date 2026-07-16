@@ -1152,7 +1152,7 @@ causet inspect event FRAUD_DECISION_MADE</div>
       const body = { forkId: config.forkId, streamId: STREAM_ID, intentType: INTENT_TYPE, entityId, payload };
       log('api', 'POST runtime/intents/submit (via @causet/sdk)', body);
       await api.init();
-      return api.emitIntent(STREAM_ID, entityId, INTENT_TYPE, payload);
+      return api.submitIntent(STREAM_ID, entityId, INTENT_TYPE, payload);
     }
 
     async function runQuery(slug, input = {}) {

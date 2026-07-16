@@ -45,7 +45,7 @@ export async function runInventoryQuery(querySlug, input = null, opts = {}) {
 }
 
 export async function submitInventoryIntent(intentType, entityId, payload) {
-  const result = await getSdkClient().emit(STREAM_ID, entityId, intentType, payload);
+  const result = await getSdkClient().submitIntent(STREAM_ID, entityId, intentType, payload);
   if (!result.accepted) {
     throw new Error(result.rejectionCode || result.error || `Intent ${intentType} rejected`);
   }
@@ -56,7 +56,7 @@ export async function submitInventoryIntent(intentType, entityId, payload) {
 export async function getClient() {
   const client = getSdkClient();
   return {
-    async emit(streamId, entityId, intentType, payload) {
+    async submitIntent(_streamId, entityId, intentType, payload) {
       return submitInventoryIntent(intentType, entityId, payload);
     },
     client,

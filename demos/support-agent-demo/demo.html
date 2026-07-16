@@ -706,7 +706,7 @@
       }
       log('intent', intentType, { streamId, entityId, payload });
       await api.init();
-      const result = await api.emitIntent(streamId, entityId, intentType, payload);
+      const result = await api.submitIntent(streamId, entityId, intentType, payload);
       log('api', result.accepted ? `${intentType} accepted` : `${intentType} rejected`, result);
       if (result.computeUnits != null) {
         state.cu.decision += Number(result.computeUnits) || 0;
